@@ -1,35 +1,85 @@
-import { IconButton, Paper } from "@mui/material";
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, Paper, TextField, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import { Activity, renderActivity } from "./activity";
+import React from "react";
 
-export function renderCalendar(): React.ReactFragment {
+export function Calendar() {
+    const [registeringActivity, setRegisteringActivity] = React.useState(false);
+    const [currentlyOpenedDay, setCurrentlyOpenedDay] = React.useState(0);
+
+    const openRegisterActivityDialog = (day: Date) => {
+        setCurrentlyOpenedDay(day.getDate());
+        setRegisteringActivity(true);
+    }
+    const closeRegisterActivityDialog = () => {
+        setRegisteringActivity(false);
+    }
+
     const days = [];
     for (let i = 1; i <= 24; i++) {
         days.push(new Date(`2021-12-${i}`));
     }
     return (
+        <div>
         <table>
             <tr>
-                { days.slice(0, 8).map(d => (<td>{renderDay(d)}</td>)) }
+                { days.slice(0, 8).map(d => (<td>{renderDay(d, openRegisterActivityDialog)}</td>)) }
             </tr>
             <tr>
-                { days.slice(8, 16).map(d => (<td>{renderDay(d)}</td>)) }
+                { days.slice(8, 16).map(d => (<td>{renderDay(d, openRegisterActivityDialog)}</td>)) }
             </tr>
             <tr>
-                { days.slice(16, 24).map(d => (<td>{renderDay(d)}</td>)) }
+                { days.slice(16, 24).map(d => (<td>{renderDay(d, openRegisterActivityDialog)}</td>)) }
             </tr>
         </table>
+        <Dialog open={registeringActivity} onClose={closeRegisterActivityDialog}>
+            <DialogTitle>Register activity</DialogTitle>
+            <DialogContent>
+            <DialogContentText>
+                Activities available to choose from today are:
+            </DialogContentText>
+            { CurrentDayActivities(currentlyOpenedDay) }
+            </DialogContent>
+            <DialogActions>
+            <Button onClick={closeRegisterActivityDialog}>Cancel</Button>
+            <Button onClick={closeRegisterActivityDialog}>Select</Button>
+            </DialogActions>
+        </Dialog>
+        </div>
     );
 }
 
-function renderDay(day: Date): React.ReactFragment {
+function CurrentDayActivities(dayOfDec: number): React.ReactFragment {
+    const availableActivities: ActivityInfo[] = getAvailableActivities(dayOfDec);
+    const [selectedActivity, setSelectedActivity] = React.useState(Activity[availableActivities[0].activity])
+
+    const handleChangedActivity = (event: any, newActivity: string) => {
+        setSelectedActivity(newActivity);
+    }
+
+    return (
+        <ToggleButtonGroup
+            color="primary"
+            value={selectedActivity}
+            exclusive
+            onChange={handleChangedActivity}
+            >
+            { availableActivities.map(a => {
+                const asString = Activity[a.activity];
+                return <ToggleButton value={asString}>{renderActivity(a.activity)} { a.value }</ToggleButton>;
+            }) }
+        </ToggleButtonGroup>
+    );
+}
+
+function renderDay(day: Date, openRegisterActivityDialog: (day: Date) => void): React.ReactFragment {
     const locked: boolean = isLocked(day);
     const loggedActivity = getLoggedActivityInfo(day);
     return (
         <div className="calendar-day">
             <Paper elevation={10} >
-                <IconButton color="primary" aria-label="open-day" onClick={clickedDay} id={day.toISOString()}>
+                <IconButton color="primary" aria-label="open-day" onClick={locked ? clickedDay : () => openRegisterActivityDialog(day) } id={day.toISOString()}>
                     { locked ? 
                             <LockIcon></LockIcon>
                         :
@@ -53,6 +103,7 @@ function clickedDay(event: React.MouseEvent<HTMLButtonElement>) {
     let clickedDate = new Date(event.currentTarget.id);
     if (!isLocked(clickedDate)) {
         alert('hmmm!');
+
     }
 }
 
@@ -66,6 +117,10 @@ interface ActivityInfo {
     value: number;
 }
 
+
+/* Server request functions below TODO */
+
+
 function getLoggedActivityInfo(day: Date): ActivityInfo | undefined {
     // TODO actually read from server
     if (day.getDate() === 1) {
@@ -73,4 +128,12 @@ function getLoggedActivityInfo(day: Date): ActivityInfo | undefined {
     } else {
         return undefined;
     }
+}
+
+function getAvailableActivities(dayOfDec: number): ActivityInfo[] {
+    // TODO, for now always just return same list
+    return [
+        { activity: Activity.BIKE, value: 15 },
+        { activity: Activity.RUN, value: 5 },
+    ];
 }
