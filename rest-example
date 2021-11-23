@@ -1,0 +1,7 @@
+curl -X PUT -d '{"username" : "foo", "pass" : "bar"}' 127.0.0.1:8080/register-user
+{"session_key":"thekey"}
+
+curl -X POST -d '{"username" : "foo", "pass" : "bar"}' 127.0.0.1:8080/login
+{"session_key":"thekey"}
+
+curl --header "Authentification: thekey" -X GET  127.0.0.1:8080/some-path

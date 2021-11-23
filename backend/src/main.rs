@@ -7,34 +7,51 @@ use hyper::{
     Body, Request, Server, StatusCode,
 };
 use serde::Deserialize;
+use serde_json::json;
+use serde_json::Value;
 
 type Response = hyper::Response<hyper::Body>;
 
-async fn add_user(body: Body) -> Result<Response> {
+fn ok_json(data: Value) -> Result<Response> {
+    Ok(Response::new(Body::from(serde_json::to_vec(&data)?)))
+}
+
+fn nok_reason(msg: String) -> Response {
+    hyper::Response::builder()
+        .status(StatusCode::NOT_FOUND)
+        .body(msg.into())
+        .unwrap()
+}
+
+async fn reg_login(body: Body, add_user: bool) -> Result<Response> {
     #[derive(Deserialize, Debug)]
-    struct Data {
+    struct RegLoginData {
         username: String,
         pass: String,
     }
+
     let bytes = hyper::body::to_bytes(body).await?;
-    let data: Data = serde_json::from_slice(&bytes)?;
+    let data: RegLoginData = serde_json::from_slice(&bytes)?;
     let db = Db::new()?;
-    db.add_user(&data.username, &data.pass)?;
-    Ok(Response::new(Body::empty()))
+    if add_user {
+        db.add_user(&data.username, &data.pass)?;
+    }
+    let user = db.get_user_id(&data.username, &data.pass)?;
+    let key = db.get_session_key(user, add_user)?;
+    Ok(ok_json(json!({ "session_key": key }))?)
 }
 
 async fn handle_request(req: Request<hyper::Body>) -> Result<Response> {
-    if let Some(_auth) = req.headers().get("Authentification") {
-        // Check session
-        // fetch user
+    if let Some(auth) = req.headers().get("Authentification") {
+        let db = Db::new()?;
+        let user = db.get_user_from_session(auth.to_str()?.into())?;
+        println!("Succesful request by {:?}", user);
         Ok(Response::new(Body::empty()))
     } else {
         match req.uri().path() {
-            "/register-user" => add_user(req.into_body()).await,
-            _ => Ok(hyper::Response::builder()
-                .status(StatusCode::NOT_FOUND)
-                .body(format!("Unknown path: {}", req.uri().path()).into())
-                .unwrap()),
+            "/register-user" => reg_login(req.into_body(), true).await,
+            "/login" => reg_login(req.into_body(), false).await,
+            _ => Ok(nok_reason(format!("Unknown path: {}", req.uri().path()))),
         }
     }
 }
