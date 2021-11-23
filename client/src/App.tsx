@@ -2,6 +2,7 @@ import './App.css';
 import { renderCalendar } from './calendar';
 import { createTheme, ThemeProvider } from '@mui/material';
 import AcUnitIcon from '@mui/icons-material/AcUnit';
+import { renderUserBar } from './user';
 
 function App() {
   const darkTheme = createTheme({
@@ -20,8 +21,9 @@ function App() {
           </span>
           <div>
             <br />
-            {renderCalendar()}
+            { renderCalendar() }
           </div>
+          { renderUserBar() }
         </header>
       </ThemeProvider>
     </div>
