@@ -4,7 +4,7 @@ use anyhow::Result;
 use db::Db;
 use hyper::{
     service::{make_service_fn, service_fn},
-    Body, Request, Server, StatusCode,
+    Body, Method, Request, Server, StatusCode,
 };
 use serde::Deserialize;
 use serde_json::json;
@@ -14,6 +14,10 @@ type Response = hyper::Response<hyper::Body>;
 
 fn ok_json(data: Value) -> Result<Response> {
     Ok(Response::new(Body::from(serde_json::to_vec(&data)?)))
+}
+
+fn ok_string(data: String) -> Result<Response> {
+    Ok(Response::new(Body::from(data)))
 }
 
 fn nok_reason(msg: String) -> Response {
@@ -41,17 +45,47 @@ async fn reg_login(body: Body, add_user: bool) -> Result<Response> {
     Ok(ok_json(json!({ "session_key": key }))?)
 }
 
+fn wrong_method(req: Request<hyper::Body>) -> Result<Response> {
+    Ok(nok_reason(format!(
+        "Wrong method: {} for path {}",
+        req.method(),
+        req.uri().path()
+    )))
+}
+
+fn unknown_path(req: Request<hyper::Body>) -> Result<Response> {
+    Ok(nok_reason(format!("Unknown path: {}", req.uri().path())))
+}
+
 async fn handle_request(req: Request<hyper::Body>) -> Result<Response> {
     if let Some(auth) = req.headers().get("Authentification") {
         let db = Db::new()?;
-        let user = db.get_user_from_session(auth.to_str()?.into())?;
-        println!("Succesful request by {:?}", user);
-        Ok(Response::new(Body::empty()))
+        //let user = db.get_user_from_session(auth.to_str()?.into())?;
+        match req.method().to_owned() {
+            Method::PUT => match req.uri().path() {
+                "/activity" => Ok(Response::new(Body::empty())),
+                _ => unknown_path(req),
+            },
+            Method::GET => match req.uri().path() {
+                "/leaderboard" => {
+                    let lb = db.get_leaderboard()?;
+                    ok_string(serde_json::to_string(&lb)?)
+                }
+                _ => unknown_path(req),
+            },
+            _ => Ok(nok_reason(format!("Method {} not allowed", req.method()))),
+        }
     } else {
         match req.uri().path() {
-            "/register-user" => reg_login(req.into_body(), true).await,
-            "/login" => reg_login(req.into_body(), false).await,
-            _ => Ok(nok_reason(format!("Unknown path: {}", req.uri().path()))),
+            "/register-user" => match req.method().to_owned() {
+                Method::PUT => reg_login(req.into_body(), true).await,
+                _ => wrong_method(req),
+            },
+            "/login" => match req.method().to_owned() {
+                Method::POST => reg_login(req.into_body(), false).await,
+                _ => wrong_method(req),
+            },
+            _ => unknown_path(req),
         }
     }
 }
