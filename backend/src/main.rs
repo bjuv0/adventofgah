@@ -60,7 +60,7 @@ fn unknown_path(req: Request<hyper::Body>) -> Result<Response> {
 async fn handle_request(req: Request<hyper::Body>) -> Result<Response> {
     if let Some(auth) = req.headers().get("Authentification") {
         let db = Db::new()?;
-        //let user = db.get_user_from_session(auth.to_str()?.into())?;
+        let user = db.get_user_from_session(auth.to_str()?.into())?;
         match req.method().to_owned() {
             Method::PUT => match req.uri().path() {
                 "/activity" => Ok(Response::new(Body::empty())),
@@ -70,6 +70,12 @@ async fn handle_request(req: Request<hyper::Body>) -> Result<Response> {
                 "/leaderboard" => {
                     let lb = db.get_leaderboard()?;
                     ok_string(serde_json::to_string(&lb)?)
+                }
+                "/calender" => {
+                    let aa = db.get_available_activities()?;
+                    let la = db.get_logged_activities(user)?;
+                    let data = json!({"available_activities" : aa, "logged_activities" : la});
+                    ok_json(data)
                 }
                 _ => unknown_path(req),
             },

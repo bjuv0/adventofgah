@@ -1,6 +1,8 @@
 use std::str::FromStr;
 
 use anyhow::Result;
+use rand::seq::SliceRandom;
+use rand::thread_rng;
 use rusqlite::Connection;
 use serde_derive::{Deserialize, Serialize};
 use serde_rusqlite::*;
@@ -32,6 +34,30 @@ pub struct LeaderBoardInfo {
     total_entries: usize,
     start_of_range: usize,
     details: Vec<LeaderboardDetail>,
+}
+
+#[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialEq)]
+pub enum Activity {
+    BIKE = 0,
+    RUN = 1,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct ActivityInfo {
+    activity: Activity,
+    value: f64,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct LoggedActivityInfo {
+    day: u8,
+    info: ActivityInfo,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct Event {
+    id: i32,
+    distance: i32,
 }
 
 pub struct Db {
@@ -66,6 +92,37 @@ impl Db {
         );",
             [],
         )?;
+        self.conn.execute(
+            "CREATE TABLE IF NOT EXISTS \"EVENT\" (
+                \"id\"	INTEGER NOT NULL,
+                \"distance\"	REAL NOT NULL,
+                PRIMARY KEY(\"id\")
+            );",
+            [],
+        )?;
+        let mut distances = vec![3; 4];
+        let mut d4 = vec![4; 5];
+        let mut d5 = vec![5; 6];
+        let mut d6 = vec![6; 5];
+        let mut d7 = vec![7; 4];
+        distances.append(&mut d4);
+        distances.append(&mut d5);
+        distances.append(&mut d6);
+        distances.append(&mut d7);
+        distances.shuffle(&mut thread_rng());
+
+        let mut day = 0;
+        for distance in distances {
+            let event = Event { id: day, distance };
+            day += 1;
+            self.conn
+                .execute(
+                    "INSERT INTO EVENT (id, distance) VALUES (:id, :distance)",
+                    to_params_named(&event).unwrap().to_slice().as_slice(),
+                )
+                .unwrap();
+        }
+
         Ok(())
     }
 
@@ -166,5 +223,22 @@ impl Db {
                 },
             ],
         })
+    }
+
+    pub fn get_available_activities(&self) -> Result<Vec<ActivityInfo>> {
+        Ok(vec![ActivityInfo {
+            activity: Activity::RUN,
+            value: 4.0,
+        }])
+    }
+
+    pub fn get_logged_activities(&self, _user: Uuid) -> Result<Vec<LoggedActivityInfo>> {
+        Ok(vec![LoggedActivityInfo {
+            day: 4,
+            info: ActivityInfo {
+                activity: Activity::RUN,
+                value: 4.0,
+            },
+        }])
     }
 }
