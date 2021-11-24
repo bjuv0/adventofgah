@@ -95,32 +95,37 @@ impl Db {
         self.conn.execute(
             "CREATE TABLE IF NOT EXISTS \"EVENT\" (
                 \"id\"	INTEGER NOT NULL,
-                \"distance\"	REAL NOT NULL,
+                \"distance\"	INTEGER NOT NULL,
                 PRIMARY KEY(\"id\")
             );",
             [],
         )?;
-        let mut distances = vec![3; 4];
-        let mut d4 = vec![4; 5];
-        let mut d5 = vec![5; 6];
-        let mut d6 = vec![6; 5];
-        let mut d7 = vec![7; 4];
-        distances.append(&mut d4);
-        distances.append(&mut d5);
-        distances.append(&mut d6);
-        distances.append(&mut d7);
-        distances.shuffle(&mut thread_rng());
+        let mut query = self.conn.prepare("SELECT * FROM EVENT").unwrap();
+        let res = from_rows::<Event>(query.query([]).unwrap());
 
-        let mut day = 0;
-        for distance in distances {
-            let event = Event { id: day, distance };
-            day += 1;
-            self.conn
-                .execute(
-                    "INSERT INTO EVENT (id, distance) VALUES (:id, :distance)",
-                    to_params_named(&event).unwrap().to_slice().as_slice(),
-                )
-                .unwrap();
+        if res.count() == 0 {
+            let mut distances = vec![3; 4];
+            let mut d4 = vec![4; 5];
+            let mut d5 = vec![5; 6];
+            let mut d6 = vec![6; 5];
+            let mut d7 = vec![7; 4];
+            distances.append(&mut d4);
+            distances.append(&mut d5);
+            distances.append(&mut d6);
+            distances.append(&mut d7);
+            distances.shuffle(&mut thread_rng());
+
+            let mut day = 0;
+            for distance in distances {
+                let event = Event { id: day, distance };
+                day += 1;
+                self.conn
+                    .execute(
+                        "INSERT INTO EVENT (id, distance) VALUES (:id, :distance)",
+                        to_params_named(&event).unwrap().to_slice().as_slice(),
+                    )
+                    .unwrap();
+            }
         }
 
         Ok(())
@@ -226,10 +231,23 @@ impl Db {
     }
 
     pub fn get_available_activities(&self) -> Result<Vec<ActivityInfo>> {
-        Ok(vec![ActivityInfo {
-            activity: Activity::RUN,
-            value: 4.0,
-        }])
+        let today = 10;
+        let mut query = self
+            .conn
+            .prepare("SELECT * FROM EVENT WHERE id <= (?)")
+            .unwrap();
+        let res = from_rows::<Event>(query.query([today]).unwrap());
+
+        // hmm this could be more prettier, need to learn more rust :P
+        let mut ret: Vec<ActivityInfo> = Vec::new();
+        for e in res {
+            ret.push(ActivityInfo {
+                activity: Activity::RUN,
+                value: e?.distance as f64,
+            });
+        }
+        println!("{:?}", ret);
+        Ok(ret)
     }
 
     pub fn get_logged_activities(&self, _user: Uuid) -> Result<Vec<LoggedActivityInfo>> {

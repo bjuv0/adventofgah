@@ -96,13 +96,23 @@ async fn handle_request(req: Request<hyper::Body>) -> Result<Response> {
     }
 }
 
+async fn try_handle_request(req: Request<hyper::Body>) -> Result<Response> {
+    match handle_request(req).await {
+        Ok(resp) => Ok(resp),
+        Err(e) => {
+            println!("{:?}", e);
+            Err(e)
+        }
+    }
+}
+
 #[tokio::main]
 async fn main() {
     let db = Db::new().expect("Db craete failed");
     db.init().expect("Db init failed");
 
     let new_service = make_service_fn(move |_| async {
-        Ok::<_, anyhow::Error>(service_fn(move |req| handle_request(req)))
+        Ok::<_, anyhow::Error>(service_fn(move |req| try_handle_request(req)))
     });
 
     let addr = "0.0.0.0:8080".parse().expect("adr failed");
