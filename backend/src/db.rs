@@ -106,7 +106,7 @@ impl Db {
         if create_if_missing {
             let session = Session {
                 id: user.to_string(),
-                key: String::from("asdfasad"),
+                key: Uuid::new_v4().to_string(),
             };
             self.conn
                 .execute(
