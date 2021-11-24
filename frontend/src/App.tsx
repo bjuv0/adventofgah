@@ -6,6 +6,21 @@ import { UserBar } from './user';
 import React from 'react';
 import { Leaderboard } from './leaderboard';
 
+export interface UserState {
+  session_key: string | undefined;
+  username: string;
+}
+
+const userState = typeof localStorage.getItem('user_state') !== 'string' ? { session_key: undefined, username: "" } : JSON.parse(localStorage.getItem('user_state')!) as UserState;
+
+export function getUserState(): UserState {
+  return userState;
+}
+
+export function storeUserState() {
+  localStorage.setItem('user_state', JSON.stringify(userState));
+}
+
 function App() {
   const darkTheme = createTheme({
     palette: {
