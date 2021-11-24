@@ -1,8 +1,10 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, Paper, TextField, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
-import { Activity, renderActivity } from "./activity";
 import React from "react";
+import { Activity, ActivityInfo } from "./protocol";
+import { getAvailableActivities, getLoggedActivityInfo } from "./transport";
+import { renderActivity } from "./activity";
 
 export function Calendar() {
     const [registeringActivity, setRegisteringActivity] = React.useState(false);
@@ -110,30 +112,4 @@ function clickedDay(event: React.MouseEvent<HTMLButtonElement>) {
 function getCurrentDay(): Date {
     // TODO Dummy-date for testing, use actual new Date(); once we are done testing
     return new Date("2021-12-11"); // Unlock a few days for testing
-}
-
-interface ActivityInfo {
-    activity: Activity;
-    value: number;
-}
-
-
-/* Server request functions below TODO */
-
-
-function getLoggedActivityInfo(day: Date): ActivityInfo | undefined {
-    // TODO actually read from server
-    if (day.getDate() === 1) {
-        return { activity: Activity.BIKE, value: 15 };
-    } else {
-        return undefined;
-    }
-}
-
-function getAvailableActivities(dayOfDec: number): ActivityInfo[] {
-    // TODO, for now always just return same list
-    return [
-        { activity: Activity.BIKE, value: 15 },
-        { activity: Activity.RUN, value: 5 },
-    ];
 }
