@@ -6,6 +6,8 @@ use rand::thread_rng;
 use rusqlite::Connection;
 use serde_derive::{Deserialize, Serialize};
 use serde_rusqlite::*;
+use strum::IntoEnumIterator;
+use strum_macros::EnumIter;
 use uuid::Uuid;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -36,10 +38,12 @@ pub struct LeaderBoardInfo {
     details: Vec<LeaderboardDetail>,
 }
 
-#[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialEq, EnumIter)]
 pub enum Activity {
     BIKE = 0,
     RUN = 1,
+    WALK = 2,
+    SKI = 3,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -62,6 +66,26 @@ pub struct Event {
 
 pub struct Db {
     conn: Connection,
+}
+
+fn multiplier(act: Activity) -> i32 {
+    match act {
+        Activity::BIKE => 3,
+        Activity::RUN => 1,
+        Activity::SKI => 2,
+        Activity::WALK => 1,
+    }
+}
+
+fn get_daily_available(dist: i32) -> Vec<ActivityInfo> {
+    let mut vec: Vec<ActivityInfo> = Vec::new();
+    for activity in Activity::iter() {
+        vec.push(ActivityInfo {
+            activity,
+            value: (dist * multiplier(activity)) as f64,
+        })
+    }
+    vec
 }
 
 impl Db {
@@ -230,7 +254,7 @@ impl Db {
         })
     }
 
-    pub fn get_available_activities(&self) -> Result<Vec<ActivityInfo>> {
+    pub fn get_available_activities(&self) -> Result<Vec<Vec<ActivityInfo>>> {
         let today = 10;
         let mut query = self
             .conn
@@ -239,14 +263,11 @@ impl Db {
         let res = from_rows::<Event>(query.query([today]).unwrap());
 
         // hmm this could be more prettier, need to learn more rust :P
-        let mut ret: Vec<ActivityInfo> = Vec::new();
+        let mut ret: Vec<Vec<ActivityInfo>> = Vec::new();
         for e in res {
-            ret.push(ActivityInfo {
-                activity: Activity::RUN,
-                value: e?.distance as f64,
-            });
+            ret.push(get_daily_available(e?.distance));
         }
-        println!("{:?}", ret);
+
         Ok(ret)
     }
 
