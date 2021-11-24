@@ -4,7 +4,7 @@ import { Activity } from './protocol';
 
 export function renderActivity(activity: Activity): React.ReactFragment {
     switch (activity) {
-        case Activity.BIKE: return <DirectionsBikeIcon/>;
-        case Activity.RUN: return <DirectionsRunIcon/>;
+        case 'BIKE': return <DirectionsBikeIcon/>;
+        case 'RUN': return <DirectionsRunIcon/>;
     }
 }

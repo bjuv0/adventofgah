@@ -1,54 +1,68 @@
 
-import { ActivityInfo, Activity } from './protocol';
+import { ActivityInfo, LoggedActivityInfo, ServerCalendarResponse, } from './protocol';
+import { getUserState } from './user';
 // Implementation of network protocol here
 
 const SERVER_BASE_URL = 'http://localhost:3000';
 
 
-export function getLoggedActivityInfo(day: Date): ActivityInfo | undefined {
-    // TODO actually read from server
-    if (day.getDate() === 1) {
-        return { activity: Activity.BIKE, value: 15 };
-    } else {
-        return undefined;
+export function getLoggedActivityInfo(day: Date, loggedActivities: LoggedActivityInfo[]): ActivityInfo | undefined {
+    for (const logged of loggedActivities) {
+        if (logged.day == day.getDate()) {
+            return logged.info;
+        }
     }
+    return undefined;
 }
 
-export function getAvailableActivities(dayOfDec: number): ActivityInfo[] {
-    // TODO, for now always just return same list
-    return [
-        { activity: Activity.BIKE, value: 15 },
-        { activity: Activity.RUN, value: 5 },
-    ];
+export async function getCalendarInfo(): Promise<ServerCalendarResponse> {
+    // const req: ClientCalendarRequest = {
+    //     get_available_activities: true,
+    //     get_logged_activities: true,
+    // };
+    // return POST<ServerCalendarResponse>('/calendar', JSON.stringify(req));
+    return GET<ServerCalendarResponse>('/calendar');
 }
 
 
 async function GET<T>(route: string): Promise<T> {
-    try {
-        const response = await fetch(SERVER_BASE_URL + route);
+    return new Promise<T>(async (resolve, reject) => {
+        const extra_headers = getExtraHeaders();
+        try {
+            const response = await fetch(SERVER_BASE_URL + route, { headers: {...extra_headers}});
 
-        const data = await response.json() as T;
-        return Promise.resolve(data);
-    } catch(e) {
-        console.error("Failed to GET: ", e);
-        return Promise.reject();
-    }
+            const data = await response.json() as T;
+            resolve(data);
+        } catch(e) {
+            console.error(`Failed to GET ${route}: ${e}`);
+            reject(`Failed to GET ${route}: ${e}`);
+        }
+    });
 }
 
 export async function POST<T>(route: string, body: string): Promise<T> {
-    try {
-        const response = await fetch(SERVER_BASE_URL + route, {
-            method: 'POST',
-            body: body,
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
+    return new Promise<T>(async (resolve, reject) => {
+        const extra_headers = getExtraHeaders();
+        try {
+            const response = await fetch(SERVER_BASE_URL + route, {
+                method: 'POST',
+                body: body,
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...extra_headers,
+                }
+            });
 
-        const data = await response.json() as T;
-        return Promise.resolve(data);
-    } catch(e) {
-        console.error("Failed to GET: ", e);
-        return Promise.reject();
-    }
+            const data = await response.json() as T;
+            resolve(data);
+        } catch(e) {
+            console.error(`Failed to POST ${route}: ${e}`);
+            reject(`Failed to POST ${route}: ${e}`);
+        }
+    });
+}
+
+
+function getExtraHeaders(): any {
+    return typeof getUserState().session_key === 'undefined' ? { } : { 'Authentification': getUserState().session_key };
 }

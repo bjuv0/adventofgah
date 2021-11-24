@@ -71,7 +71,7 @@ async fn handle_request(req: Request<hyper::Body>) -> Result<Response> {
                     let lb = db.get_leaderboard()?;
                     ok_string(serde_json::to_string(&lb)?)
                 }
-                "/calender" => {
+                "/calendar" => {
                     let aa = db.get_available_activities()?;
                     let la = db.get_logged_activities(user)?;
                     let data = json!({"available_activities" : aa, "logged_activities" : la});

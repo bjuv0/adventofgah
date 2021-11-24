@@ -2,13 +2,31 @@ import { Button, Dialog, DialogActions, DialogContent, DialogContentText, Dialog
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import React from "react";
-import { Activity, ActivityInfo } from "./protocol";
-import { getAvailableActivities, getLoggedActivityInfo } from "./transport";
+import { Activity, ActivityInfo, LoggedActivityInfo, ServerCalendarResponse } from "./protocol";
+import { getCalendarInfo, getLoggedActivityInfo } from "./transport";
 import { renderActivity } from "./activity";
+
+let infoQuery: Promise<ServerCalendarResponse> | undefined = undefined;
 
 export function Calendar() {
     const [registeringActivity, setRegisteringActivity] = React.useState(false);
     const [currentlyOpenedDay, setCurrentlyOpenedDay] = React.useState(0);
+    const [loggedActivities, setLoggedActivities] = React.useState<LoggedActivityInfo[]>([]);
+    const [availableActivities, setAvailableActivities] = React.useState<Array<ActivityInfo[]>>([]);
+
+    if (typeof infoQuery === 'undefined' && availableActivities.length === 0) {
+        infoQuery = getCalendarInfo();
+        infoQuery.then(response => {
+            if (typeof response.available_activities !== 'undefined') {
+                setAvailableActivities(response.available_activities);
+            }
+            if (typeof response.logged_activities !== 'undefined') {
+                setLoggedActivities(response.logged_activities);
+            }
+        })
+        .catch(error => console.log(error))
+        .finally(() => infoQuery = undefined);
+    }
 
     const openRegisterActivityDialog = (day: Date) => {
         setCurrentlyOpenedDay(day.getDate());
@@ -26,13 +44,13 @@ export function Calendar() {
         <div>
         <table>
             <tr>
-                { days.slice(0, 8).map(d => (<td>{renderDay(d, openRegisterActivityDialog)}</td>)) }
+                { days.slice(0, 8).map(d => (<td>{renderDay(d, openRegisterActivityDialog, loggedActivities)}</td>)) }
             </tr>
             <tr>
-                { days.slice(8, 16).map(d => (<td>{renderDay(d, openRegisterActivityDialog)}</td>)) }
+                { days.slice(8, 16).map(d => (<td>{renderDay(d, openRegisterActivityDialog, loggedActivities)}</td>)) }
             </tr>
             <tr>
-                { days.slice(16, 24).map(d => (<td>{renderDay(d, openRegisterActivityDialog)}</td>)) }
+                { days.slice(16, 24).map(d => (<td>{renderDay(d, openRegisterActivityDialog, loggedActivities)}</td>)) }
             </tr>
         </table>
         <Dialog open={registeringActivity} onClose={closeRegisterActivityDialog}>
@@ -41,7 +59,7 @@ export function Calendar() {
             <DialogContentText>
                 Activities available to choose from today are:
             </DialogContentText>
-            { CurrentDayActivities(currentlyOpenedDay) }
+            { CurrentDayActivities(currentlyOpenedDay - 1, availableActivities) }
             </DialogContent>
             <DialogActions>
             <Button onClick={closeRegisterActivityDialog}>Cancel</Button>
@@ -52,11 +70,17 @@ export function Calendar() {
     );
 }
 
-function CurrentDayActivities(dayOfDec: number): React.ReactFragment {
-    const availableActivities: ActivityInfo[] = getAvailableActivities(dayOfDec);
-    const [selectedActivity, setSelectedActivity] = React.useState(Activity[availableActivities[0].activity])
+function CurrentDayActivities(dayOfDecZeroIndexed: number, availableActivities: Array<ActivityInfo[]>): React.ReactFragment {
+    let todayActivities: ActivityInfo[] | undefined = undefined;
+    if (dayOfDecZeroIndexed < availableActivities.length && dayOfDecZeroIndexed >= 0) {
+        todayActivities = [];
+        for (let i = 0; i < availableActivities[dayOfDecZeroIndexed].length; i++) {
+            todayActivities.push(availableActivities[dayOfDecZeroIndexed][i]);
+        }
+    }
+    const [selectedActivity, setSelectedActivity] = React.useState<Activity>('RUN');
 
-    const handleChangedActivity = (event: any, newActivity: string) => {
+    const handleChangedActivity = (event: any, newActivity: Activity) => {
         setSelectedActivity(newActivity);
     }
 
@@ -67,17 +91,21 @@ function CurrentDayActivities(dayOfDec: number): React.ReactFragment {
             exclusive
             onChange={handleChangedActivity}
             >
-            { availableActivities.map(a => {
-                const asString = Activity[a.activity];
-                return <ToggleButton value={asString}>{renderActivity(a.activity)} { a.value }</ToggleButton>;
-            }) }
+            {
+                typeof todayActivities === 'undefined' ?
+                    <p>"No activities"</p>
+                :
+                    todayActivities.map(a => {
+                    return <ToggleButton value={a.activity}>{renderActivity(a.activity)} { a.value }</ToggleButton>;
+                })
+            }
         </ToggleButtonGroup>
     );
 }
 
-function renderDay(day: Date, openRegisterActivityDialog: (day: Date) => void): React.ReactFragment {
+function renderDay(day: Date, openRegisterActivityDialog: (day: Date) => void, loggedActivities: LoggedActivityInfo[]): React.ReactFragment {
     const locked: boolean = isLocked(day);
-    const loggedActivity = getLoggedActivityInfo(day);
+    const loggedActivity = getLoggedActivityInfo(day, loggedActivities);
     return (
         <div className="calendar-day">
             <Paper elevation={10} >

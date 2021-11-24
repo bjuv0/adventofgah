@@ -1,10 +1,10 @@
 
 
-// Used for /register-user
+// Used for PUT /register-user
 export type ClientRegisterUserRequest = UsernamePass;
 export type ServerRegisterUserResponse = SessionKeyResponse;
 
-// Used for /login
+// Used for POST /login
 export type ClientLoginRequest = UsernamePass;
 export type ServerLoginResponse = SessionKeyResponse;
 
@@ -12,7 +12,7 @@ export type ServerLoginResponse = SessionKeyResponse;
 export type ClientLeaderboardRequest = Range;
 export type ServerLeaderboardResponse = LeaderboardInfo;
 
-// Used for /calendar
+// Used for GET /calendar
 export type ClientCalendarRequest = CalendarGetRequest;
 export type ServerCalendarResponse = CalendarResponse;
 
@@ -49,11 +49,7 @@ interface Range {
     end?: number;
 }
 
-export enum Activity {
-    BIKE,
-    RUN,
-
-}
+export type Activity = 'BIKE' | 'RUN';
 
 export interface ActivityInfo {
     activity: Activity;
@@ -61,7 +57,7 @@ export interface ActivityInfo {
 }
 
 export interface LoggedActivityInfo {
-    day: string;    // UTC string
+    day: number;    // day of dec 0-23
     info: ActivityInfo;
 }
 
@@ -75,6 +71,6 @@ interface ActivityPutRequest {
 }
 
 interface CalendarResponse {
-    available_activities?: ActivityInfo[];
-    logged_activities?: ActivityInfo[];
+    available_activities?: Array<ActivityInfo[]>;
+    logged_activities?: LoggedActivityInfo[];
 }

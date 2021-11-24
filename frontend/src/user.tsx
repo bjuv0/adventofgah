@@ -12,7 +12,7 @@ interface UserState {
 
 const userState = typeof localStorage.getItem('user_state') !== 'string' ? { session_key: undefined, username: "" } : JSON.parse(localStorage.getItem('user_state')!) as UserState;
 
-function getUserState(): UserState {
+export function getUserState(): UserState {
     return userState;
 }
 
