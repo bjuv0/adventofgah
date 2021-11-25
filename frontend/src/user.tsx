@@ -1,7 +1,7 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from "@mui/material";
 import React from "react";
 import { ClientLoginRequest, ServerLoginResponse } from "./protocol";
-import { POST } from "./transport";
+import { POST, PUT } from "./transport";
 import './user.css';
 
 
@@ -23,11 +23,18 @@ function storeUserState() {
 
 export function UserBar() {
     const [loginDialogOpen, setLoginDialogOpen] = React.useState(false);
+    const [isLoginKind, setIsLoginKind] = React.useState(false);
     const [isLoggedIn, setIsLoggedIn] = React.useState(typeof getUserState().session_key === 'string');
 
 
     const openLoginDialog = () => {
         setLoginDialogOpen(true);
+        setIsLoginKind(true);
+    }
+
+    const openRegisterDialog = () => {
+        setLoginDialogOpen(true);
+        setIsLoginKind(false);
     }
 
     const logout = () => {
@@ -40,32 +47,29 @@ export function UserBar() {
     return (
         <div className="floating-user-bar">
             {
-                isLoggedIn ? 
-                <div>
-                    <Button onClick={logout}>Logout {getUserState().username}</Button>
-                </div>
-                :
-                <div>
-                    <Button onClick={openLoginDialog}>Login</Button>
-                    <Button onClick={registerUser}>Register</Button>
-                </div>
+                isLoggedIn ?
+                    <div>
+                        <Button onClick={logout}>Logout {getUserState().username}</Button>
+                    </div>
+                    :
+                    <div>
+                        <Button onClick={openLoginDialog}>Login</Button>
+                        <Button onClick={openRegisterDialog}>Register</Button>
+                    </div>
             }
-            { LoginDialog(loginDialogOpen, setLoginDialogOpen, setIsLoggedIn) }
+            {LoginDialog(loginDialogOpen, isLoginKind, setLoginDialogOpen, setIsLoggedIn)}
         </div>
     )
 }
 
-
-function registerUser() {
-    alert(`todo register`);
-}
-
-function LoginDialog(loginDialogOpen: boolean,
+function LoginDialog(loginDialogOpen: boolean, isLoginKind: boolean,
     setLoginDialogOpen: (open: boolean) => void,
     setIsLoggedIn: (isLoggedIn: boolean) => void): React.ReactFragment {
 
     let username = "";
     let password = "";
+
+    let kind = isLoginKind ? "Login" : "Register";
 
     const handleUsernameChanged = (event: any) => {
         username = event.target.value;
@@ -76,14 +80,20 @@ function LoginDialog(loginDialogOpen: boolean,
 
     const handleClose = async (event: React.MouseEvent<HTMLButtonElement>) => {
         setLoginDialogOpen(false);
-        if (event.currentTarget.id === 'login') {
+        if (event.currentTarget.id === 'login' || event.currentTarget.id === 'register') {
             // Login with server
             const req: ClientLoginRequest = {
                 username: username,
                 pass: password, // TODO Hash?
             };
             try {
-                const reply = await POST<ServerLoginResponse>('/login', JSON.stringify(req));
+                let reply;
+                if (event.currentTarget.id === 'login') {
+                    reply = await POST<ServerLoginResponse>('/login', JSON.stringify(req));
+                } else {
+                    reply = await PUT<ServerLoginResponse>('/register-user', JSON.stringify(req));
+                }
+
                 console.log("Received session_key: " + reply.session_key);
                 getUserState().username = username;
                 getUserState().session_key = reply.session_key;
@@ -97,31 +107,31 @@ function LoginDialog(loginDialogOpen: boolean,
 
     return (
         <Dialog open={loginDialogOpen} onClose={handleClose}>
-            <DialogTitle>Login</DialogTitle>
+            <DialogTitle>{kind}</DialogTitle>
             <DialogContent>
-            <TextField
-                autoFocus
-                margin="dense"
-                id="name"
-                label="Username"
-                type="email"
-                fullWidth
-                variant="standard"
-                onChange={handleUsernameChanged}
-            />
-            <TextField
-                margin="dense"
-                id="name"
-                label="password"
-                type="password"
-                fullWidth
-                variant="standard"
-                onChange={handlePasswordChanged}
-            />
+                <TextField
+                    autoFocus
+                    margin="dense"
+                    id="name"
+                    label="Username"
+                    type="email"
+                    fullWidth
+                    variant="standard"
+                    onChange={handleUsernameChanged}
+                />
+                <TextField
+                    margin="dense"
+                    id="name"
+                    label="password"
+                    type="password"
+                    fullWidth
+                    variant="standard"
+                    onChange={handlePasswordChanged}
+                />
             </DialogContent>
             <DialogActions>
-            <Button onClick={handleClose} id='cancel'>Cancel</Button>
-            <Button onClick={handleClose} id='login'>Login</Button>
+                <Button onClick={handleClose} id='cancel'>Cancel</Button>
+                {isLoginKind ? <Button onClick={handleClose} id='login'>{kind}</Button> : <Button onClick={handleClose} id='register'>{kind}</Button>}
             </DialogActions>
         </Dialog>
     );

@@ -113,8 +113,12 @@ async fn handle_request(req: Request<hyper::Body>) -> Result<Response> {
 }
 
 async fn try_handle_request(req: Request<hyper::Body>) -> Result<Response> {
+    println!("Got request {:?}", req);
     match handle_request(req).await {
-        Ok(resp) => Ok(resp),
+        Ok(resp) => {
+            println!("Sending response {:?}", resp);
+            Ok(resp)
+        }
         Err(e) => {
             println!("{:?}", e);
             Err(e)

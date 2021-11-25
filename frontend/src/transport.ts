@@ -29,11 +29,11 @@ async function GET<T>(route: string): Promise<T> {
     return new Promise<T>(async (resolve, reject) => {
         const extra_headers = getExtraHeaders();
         try {
-            const response = await fetch(SERVER_BASE_URL + route, { headers: {...extra_headers}});
+            const response = await fetch(SERVER_BASE_URL + route, { headers: { ...extra_headers } });
 
             const data = await response.json() as T;
             resolve(data);
-        } catch(e) {
+        } catch (e) {
             console.error(`Failed to GET ${route}: ${e}`);
             reject(`Failed to GET ${route}: ${e}`);
         }
@@ -55,7 +55,29 @@ export async function POST<T>(route: string, body: string): Promise<T> {
 
             const data = await response.json() as T;
             resolve(data);
-        } catch(e) {
+        } catch (e) {
+            console.error(`Failed to POST ${route}: ${e}`);
+            reject(`Failed to POST ${route}: ${e}`);
+        }
+    });
+}
+
+export async function PUT<T>(route: string, body: string): Promise<T> {
+    return new Promise<T>(async (resolve, reject) => {
+        const extra_headers = getExtraHeaders();
+        try {
+            const response = await fetch(SERVER_BASE_URL + route, {
+                method: 'PUT',
+                body: body,
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...extra_headers,
+                }
+            });
+
+            const data = await response.json() as T;
+            resolve(data);
+        } catch (e) {
             console.error(`Failed to POST ${route}: ${e}`);
             reject(`Failed to POST ${route}: ${e}`);
         }
@@ -64,5 +86,5 @@ export async function POST<T>(route: string, body: string): Promise<T> {
 
 
 function getExtraHeaders(): any {
-    return typeof getUserState().session_key === 'undefined' ? { } : { 'Authentification': getUserState().session_key };
+    return typeof getUserState().session_key === 'undefined' ? {} : { 'Authentification': getUserState().session_key };
 }
