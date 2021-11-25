@@ -121,7 +121,9 @@ function LoginDialog(loginDialogOpen: boolean, isLoginKind: boolean,
                 getUserState().session_key = reply.session_key;
                 storeUserState();
                 setIsLoggedIn(true);
-                setWelcomeDialogOpen(true);
+                if (event.currentTarget.id === 'register') {
+                    setWelcomeDialogOpen(true);
+                }
             } catch (e) {
                 alert(`Failed to login: ${e}`);
             }
