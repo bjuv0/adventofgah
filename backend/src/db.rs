@@ -54,7 +54,7 @@ pub struct ActivityInfo {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct LoggedActivityInfo {
-    day: u8,
+    day: i32,
     info: ActivityInfo,
 }
 
@@ -64,8 +64,21 @@ pub struct Event {
     distance: i32,
 }
 
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct ActivityRecord {
+    user: String,
+    event_id: i32,
+    activity: Activity,
+    score: f64,
+    distance: f64,
+}
+
 pub struct Db {
     conn: Connection,
+}
+
+pub fn today() -> i32 {
+    10
 }
 
 fn multiplier(act: Activity) -> i32 {
@@ -101,9 +114,9 @@ impl Db {
     pub fn init(&self) -> Result<()> {
         self.conn.execute(
             "CREATE TABLE IF NOT EXISTS \"USERS\" (
-                \"id\"	TEXT NOT NULL UNIQUE,
-                \"username\"	TEXT NOT NULL,
-                \"pass\"	TEXT NOT NULL,
+                \"id\" TEXT NOT NULL UNIQUE,
+                \"username\" TEXT NOT NULL,
+                \"pass\" TEXT NOT NULL,
                 PRIMARY KEY(\"id\")
             );",
             [],
@@ -117,9 +130,19 @@ impl Db {
             [],
         )?;
         self.conn.execute(
+            "CREATE TABLE IF NOT EXISTS \"ACTIVITYRECORD\" (
+                \"user\" TEXT NOT NULL,
+                \"event_id\" INTEGER NOT NULL,
+                \"activity\" INTEGER NOT NULL,
+                \"score\" REAL NOT NULL,
+                \"distance\" REAL NOT NULL
+            );",
+            [],
+        )?;
+        self.conn.execute(
             "CREATE TABLE IF NOT EXISTS \"EVENT\" (
-                \"id\"	INTEGER NOT NULL,
-                \"distance\"	INTEGER NOT NULL,
+                \"id\" INTEGER NOT NULL,
+                \"distance\" INTEGER NOT NULL,
                 PRIMARY KEY(\"id\")
             );",
             [],
@@ -255,12 +278,11 @@ impl Db {
     }
 
     pub fn get_available_activities(&self) -> Result<Vec<Vec<ActivityInfo>>> {
-        let today = 10;
         let mut query = self
             .conn
             .prepare("SELECT * FROM EVENT WHERE id <= (?)")
             .unwrap();
-        let res = from_rows::<Event>(query.query([today]).unwrap());
+        let res = from_rows::<Event>(query.query([today()]).unwrap());
 
         // hmm this could be more prettier, need to learn more rust :P
         let mut ret: Vec<Vec<ActivityInfo>> = Vec::new();
@@ -271,13 +293,84 @@ impl Db {
         Ok(ret)
     }
 
-    pub fn get_logged_activities(&self, _user: Uuid) -> Result<Vec<LoggedActivityInfo>> {
-        Ok(vec![LoggedActivityInfo {
-            day: 4,
-            info: ActivityInfo {
-                activity: Activity::RUN,
-                value: 4.0,
-            },
-        }])
+    pub fn get_daily_event(&self, day: i32) -> Result<Event> {
+        let mut query = self
+            .conn
+            .prepare("SELECT * FROM EVENT WHERE id <= (?)")
+            .unwrap();
+        let res = from_rows::<Event>(query.query([day]).unwrap());
+        for e in res {
+            return Ok(e?);
+        }
+        Err(anyhow::anyhow!("Already registered"))
+    }
+
+    pub fn get_logged_activities(&self, user: Uuid) -> Result<Vec<LoggedActivityInfo>> {
+        let mut query = self
+            .conn
+            .prepare("SELECT * FROM ACTIVITYRECORD WHERE user = (?)")
+            .unwrap();
+        let res = from_rows::<ActivityRecord>(query.query([user.to_string()]).unwrap());
+        let mut activities: Vec<LoggedActivityInfo> = Vec::new();
+        for a in res {
+            let a = a?;
+            activities.push(LoggedActivityInfo {
+                day: a.event_id,
+                info: ActivityInfo {
+                    activity: a.activity,
+                    value: a.distance,
+                },
+            });
+        }
+        Ok(activities)
+    }
+
+    pub fn add_activity(&self, user: Uuid, day: i32, info: ActivityInfo) -> Result<()> {
+        if day > today() {
+            return Err(anyhow::anyhow!("Can not set activities in the future"));
+        }
+
+        let mut query = self
+            .conn
+            .prepare("SELECT * FROM ACTIVITYRECORD WHERE event_id = (?) AND user = (?)")
+            .unwrap();
+        let res = from_rows::<Event>(
+            query
+                .query(serde_rusqlite::to_params(&(day, user.to_string())).unwrap())
+                .unwrap(),
+        );
+
+        if res.count() > 0 {
+            return Err(anyhow::anyhow!("Already registered"));
+        }
+
+        let event_of_the_day = self.get_daily_event(day)?;
+
+        let covered_dist = info.value.max(0.0);
+
+        let mut score = 10.0 * (covered_dist / multiplier(info.activity) as f64)
+            / event_of_the_day.distance as f64;
+        score = score.min(10.0);
+
+        if day != today() {
+            score /= 2.0;
+        }
+
+        let record = ActivityRecord {
+            user: user.to_string(),
+            event_id: day,
+            activity: info.activity,
+            score,
+            distance: covered_dist,
+        };
+
+        self.conn
+            .execute(
+                "INSERT INTO ACTIVITYRECORD (user, event_id, activity, score, distance) VALUES (:user, :event_id, :activity, :score, :distance)",
+                to_params_named(&record).unwrap().to_slice().as_slice(),
+            )
+            .unwrap();
+
+        Ok(())
     }
 }

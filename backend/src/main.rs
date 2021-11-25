@@ -9,6 +9,7 @@ use hyper::{
 use serde::Deserialize;
 use serde_json::json;
 use serde_json::Value;
+use uuid::Uuid;
 
 type Response = hyper::Response<hyper::Body>;
 
@@ -53,6 +54,20 @@ fn wrong_method(req: Request<hyper::Body>) -> Result<Response> {
     )))
 }
 
+async fn add_activity(db: Db, user: Uuid, body: Body) -> Result<Response> {
+    #[derive(Deserialize, Debug)]
+
+    struct ActivityPutData {
+        day: i32,
+        info: db::ActivityInfo,
+    }
+
+    let bytes = hyper::body::to_bytes(body).await?;
+    let data: ActivityPutData = serde_json::from_slice(&bytes)?;
+    db.add_activity(user, data.day, data.info)?;
+    Ok(Response::new(Body::empty()))
+}
+
 fn unknown_path(req: Request<hyper::Body>) -> Result<Response> {
     Ok(nok_reason(format!("Unknown path: {}", req.uri().path())))
 }
@@ -63,7 +78,7 @@ async fn handle_request(req: Request<hyper::Body>) -> Result<Response> {
         let user = db.get_user_from_session(auth.to_str()?.into())?;
         match req.method().to_owned() {
             Method::PUT => match req.uri().path() {
-                "/activity" => Ok(Response::new(Body::empty())),
+                "/log-activity" => add_activity(db, user, req.into_body()).await,
                 _ => unknown_path(req),
             },
             Method::GET => match req.uri().path() {
@@ -77,6 +92,7 @@ async fn handle_request(req: Request<hyper::Body>) -> Result<Response> {
                     let data = json!({"available_activities" : aa, "logged_activities" : la});
                     ok_json(data)
                 }
+                "/today" => ok_json(json!({ "day": db::today() })),
                 _ => unknown_path(req),
             },
             _ => Ok(nok_reason(format!("Method {} not allowed", req.method()))),
