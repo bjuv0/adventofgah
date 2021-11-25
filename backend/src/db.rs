@@ -28,7 +28,9 @@ pub struct LeaderboardDetail {
     username: String,
     points: f64,
     bike_dst: f64,
+    walk_dst: f64,
     run_dst: f64,
+    ski_dst: f64,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -217,6 +219,18 @@ impl Db {
         Err(anyhow::anyhow!("User pass incorrect"))
     }
 
+    pub fn get_user_name(&self, id: &String) -> Result<String> {
+        let mut query = self
+            .conn
+            .prepare("SELECT * FROM USERS WHERE id = (?)")
+            .unwrap();
+        let mut res = from_rows::<User>(query.query([id]).unwrap());
+        if let Some(data) = res.next() {
+            return Ok(data?.username);
+        }
+        Err(anyhow::anyhow!("Could not find user"))
+    }
+
     pub fn get_session_key(&self, user: Uuid, create_if_missing: bool) -> Result<String> {
         let mut query = self
             .conn
@@ -256,24 +270,49 @@ impl Db {
         Err(anyhow::anyhow!("Could not find user"))
     }
 
+    fn get_user_leaderboard_entry(&self, user: String) -> Result<LeaderboardDetail> {
+        let mut details = LeaderboardDetail {
+            username: self.get_user_name(&user)?,
+            points: 0.0,
+            bike_dst: 0.0,
+            walk_dst: 0.0,
+            run_dst: 0.0,
+            ski_dst: 0.0,
+        };
+
+        let mut query = self
+            .conn
+            .prepare("SELECT * FROM ACTIVITYRECORD WHERE user = (?)")
+            .unwrap();
+        let res = from_rows::<ActivityRecord>(query.query([user]).unwrap());
+        for activity in res {
+            let activity = activity?;
+            match activity.activity {
+                Activity::BIKE => details.bike_dst += activity.distance,
+                Activity::RUN => details.run_dst += activity.distance,
+                Activity::WALK => details.walk_dst += activity.distance,
+                Activity::SKI => details.ski_dst += activity.distance,
+            }
+            details.points += activity.score;
+        }
+
+        Ok(details)
+    }
+
     pub fn get_leaderboard(&self) -> Result<LeaderBoardInfo> {
+        let mut board: Vec<LeaderboardDetail> = Vec::new();
+
+        let mut query = self.conn.prepare("SELECT * FROM USERS").unwrap();
+        let res = from_rows::<User>(query.query([]).unwrap());
+
+        for user in res {
+            board.push(self.get_user_leaderboard_entry(user?.id)?)
+        }
+
         Ok(LeaderBoardInfo {
-            total_entries: 2,
+            total_entries: board.len(),
             start_of_range: 0,
-            details: vec![
-                LeaderboardDetail {
-                    username: String::from("foo"),
-                    points: 26.0,
-                    bike_dst: 30.0,
-                    run_dst: 46.0,
-                },
-                LeaderboardDetail {
-                    username: String::from("bar"),
-                    points: 35.0,
-                    bike_dst: 10.0,
-                    run_dst: 50.0,
-                },
-            ],
+            details: board,
         })
     }
 
