@@ -23,6 +23,7 @@ function storeUserState() {
 
 export function UserBar() {
     const [loginDialogOpen, setLoginDialogOpen] = React.useState(false);
+    const [welcomeDialogOpen, setWelcomeDialogOpen] = React.useState(false);
     const [isLoginKind, setIsLoginKind] = React.useState(false);
     const [isLoggedIn, setIsLoggedIn] = React.useState(typeof getUserState().session_key === 'string');
 
@@ -57,14 +58,34 @@ export function UserBar() {
                         <Button onClick={openRegisterDialog}>Register</Button>
                     </div>
             }
-            {LoginDialog(loginDialogOpen, isLoginKind, setLoginDialogOpen, setIsLoggedIn)}
+            {LoginDialog(loginDialogOpen, isLoginKind, setLoginDialogOpen, setIsLoggedIn, setWelcomeDialogOpen)}
+            {welcomeDialog(welcomeDialogOpen, setWelcomeDialogOpen)}
         </div>
     )
 }
 
+function welcomeDialog(welcomeDialogOpen: boolean,
+    setWelcomeDialogOpen: (open: boolean) => void): React.ReactFragment {
+
+    const handleClose = async (event: React.MouseEvent<HTMLButtonElement>) => {
+        setWelcomeDialogOpen(false);
+    }
+
+    return (
+        <Dialog open={welcomeDialogOpen} onClose={handleClose}>
+            <DialogTitle>Welome {getUserState().username}!!</DialogTitle>
+            <DialogContent>Nice of you to join Advent of Gah</DialogContent>
+            <DialogActions>
+                <Button onClick={handleClose} id='cancel'>Ok</Button>
+            </DialogActions>
+        </Dialog>
+    );
+}
+
 function LoginDialog(loginDialogOpen: boolean, isLoginKind: boolean,
     setLoginDialogOpen: (open: boolean) => void,
-    setIsLoggedIn: (isLoggedIn: boolean) => void): React.ReactFragment {
+    setIsLoggedIn: (isLoggedIn: boolean) => void,
+    setWelcomeDialogOpen: (welcome: boolean) => void): React.ReactFragment {
 
     let username = "";
     let password = "";
@@ -99,6 +120,7 @@ function LoginDialog(loginDialogOpen: boolean, isLoginKind: boolean,
                 getUserState().session_key = reply.session_key;
                 storeUserState();
                 setIsLoggedIn(true);
+                setWelcomeDialogOpen(true);
             } catch (e) {
                 alert(`Failed to login: ${e}`);
             }
