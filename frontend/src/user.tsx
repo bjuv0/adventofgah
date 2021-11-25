@@ -3,6 +3,7 @@ import React from "react";
 import { ClientLoginRequest, ServerLoginResponse } from "./protocol";
 import { POST, PUT } from "./transport";
 import './user.css';
+import { Md5 } from 'ts-md5/dist/md5';
 
 
 interface UserState {
@@ -105,7 +106,7 @@ function LoginDialog(loginDialogOpen: boolean, isLoginKind: boolean,
             // Login with server
             const req: ClientLoginRequest = {
                 username: username,
-                pass: password, // TODO Hash?
+                pass: Md5.hashStr(password),
             };
             try {
                 let reply;
