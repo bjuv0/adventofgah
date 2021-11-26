@@ -101,8 +101,9 @@ function LoginDialog(loginDialogOpen: boolean, isLoginKind: boolean,
     }
 
     const handleClose = async (event: React.MouseEvent<HTMLButtonElement>) => {
+        const currentTargetId = event.currentTarget.id;
         setLoginDialogOpen(false);
-        if (event.currentTarget.id === 'login' || event.currentTarget.id === 'register') {
+        if (currentTargetId === 'login' || currentTargetId === 'register') {
             // Login with server
             const req: ClientLoginRequest = {
                 username: username,
@@ -110,7 +111,7 @@ function LoginDialog(loginDialogOpen: boolean, isLoginKind: boolean,
             };
             try {
                 let reply;
-                if (event.currentTarget.id === 'login') {
+                if (currentTargetId === 'login') {
                     reply = await POST<ServerLoginResponse>('/login', JSON.stringify(req));
                 } else {
                     reply = await PUT<ServerLoginResponse>('/register-user', JSON.stringify(req));
@@ -121,7 +122,7 @@ function LoginDialog(loginDialogOpen: boolean, isLoginKind: boolean,
                 getUserState().session_key = reply.session_key;
                 storeUserState();
                 setIsLoggedIn(true);
-                if (event.currentTarget.id === 'register') {
+                if (currentTargetId === 'register') {
                     setWelcomeDialogOpen(true);
                 }
             } catch (e) {

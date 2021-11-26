@@ -8,7 +8,7 @@ const SERVER_BASE_URL = 'http://localhost:3000';
 
 export function getLoggedActivityInfo(day: Date, loggedActivities: LoggedActivityInfo[]): ActivityInfo | undefined {
     for (const logged of loggedActivities) {
-        if (logged.day == day.getDate()) {
+        if (logged.day === day.getDate()) {
             return logged.info;
         }
     }
