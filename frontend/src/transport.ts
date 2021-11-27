@@ -25,7 +25,7 @@ export async function getCalendarInfo(): Promise<ServerCalendarResponse> {
 }
 
 
-async function GET<T>(route: string): Promise<T> {
+export async function GET<T>(route: string): Promise<T> {
     return new Promise<T>(async (resolve, reject) => {
         const extra_headers = getExtraHeaders();
         try {

@@ -9,7 +9,7 @@ export type ClientLoginRequest = UsernamePass;
 export type ServerLoginResponse = SessionKeyResponse;
 
 // Used for /leaderboard
-export type ClientLeaderboardRequest = Range;
+// export type ClientLeaderboardRequest = Range;
 export type ServerLeaderboardResponse = LeaderboardInfo;
 
 // Used for GET /calendar
@@ -31,11 +31,13 @@ interface SessionKeyResponse {
     session_key: string;
 }
 
-interface LeaderboardDetail {
+export interface LeaderboardDetail {
     username: string;
     points: number;
     bike_dst: number;   // Total bike distance
-    run_dst: number;    // Total run/walk distance
+    run_dst: number;    // Total run distance
+    walk_dst: number;   // Total walk distance
+    ski_dst: number;    // Total ski distance
 }
 
 interface LeaderboardInfo {
