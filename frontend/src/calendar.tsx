@@ -1,4 +1,4 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, Paper, ToggleButton, ToggleButtonGroup } from "@mui/material";
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, Paper, TextField, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import React from "react";
@@ -32,7 +32,18 @@ export function Calendar() {
     const [loggedActivities, setLoggedActivities] = React.useState<LoggedActivityInfo[]>([]);
     const [availableActivities, setAvailableActivities] = React.useState<Array<ActivityInfo[]>>([]);
     const [selectedActivityForRegistration, setSelectedActivityForRegistration] = React.useState<Activity>('RUN');
+    const [activityDistanceForRegistration, setActivityDistanceForRegistration] = React.useState<string>('');
 
+    let parsedDistance = -1;
+    let validDistance = false;
+    try {
+        parsedDistance = Number.parseInt(activityDistanceForRegistration);
+        if (parsedDistance >= 0) {
+            validDistance = true;
+        }
+    } catch (_) {
+
+    }
 
     setTimeout(() => {
         if (availableActivities.length === 0) {
@@ -46,14 +57,17 @@ export function Calendar() {
     }
     const closeRegisterActivityDialog = (event: React.MouseEvent<HTMLButtonElement>) => {
         setRegisteringActivity(false);
-        if (event.currentTarget.id === 'register') {
+        if (event.currentTarget.id === 'register' && validDistance) {
             const currentActivitySet = getActivitiesForDay(currentlyOpenedDay, availableActivities);
             if (typeof currentActivitySet !== 'undefined') {
                 for (const act of currentActivitySet) {
                     if (act.activity === selectedActivityForRegistration) {
                         const req: ClientLogActivityRequest = {
                             day: currentlyOpenedDay,
-                            info: act
+                            info: {
+                                activity: act.activity,
+                                value: parsedDistance
+                            }
                         };
                         PUT<{}>('/log-activity', JSON.stringify(req)).then(() => refreshCalendar(setAvailableActivities, setLoggedActivities))
                             .catch(error => console.error(`Failed to log activity: ${error}`));
@@ -63,6 +77,10 @@ export function Calendar() {
                 }
             }
         }
+    }
+
+    const handleLogActivityDistanceChanged = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setActivityDistanceForRegistration(event.currentTarget.value);
     }
 
     const days = [];
@@ -89,10 +107,20 @@ export function Calendar() {
                 Activities available to choose from today are:
             </DialogContentText>
             { CurrentDayActivities(currentlyOpenedDay, availableActivities, selectedActivityForRegistration, setSelectedActivityForRegistration) }
+            <TextField
+                    autoFocus
+                    margin='dense'
+                    id='distance'
+                    label='Distance'
+                    type='text'
+                    fullWidth
+                    variant="standard"
+                    onChange={handleLogActivityDistanceChanged}
+                />
             </DialogContent>
             <DialogActions>
             <Button onClick={closeRegisterActivityDialog} id='cancel'>Cancel</Button>
-            <Button onClick={closeRegisterActivityDialog} id='register'>Register</Button>
+            <Button onClick={closeRegisterActivityDialog} id='register' disabled={!validDistance}>Log</Button>
             </DialogActions>
         </Dialog>
         </div>
