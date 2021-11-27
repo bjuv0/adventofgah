@@ -40,14 +40,14 @@ export function Calendar() {
         }
     }, 50); // Wait until initial pageload is done, then trigger update
 
-    const openRegisterActivityDialog = (day: Date) => {
-        setCurrentlyOpenedDay(day.getDate());
+    const openRegisterActivityDialog = (day: number) => {
+        setCurrentlyOpenedDay(day);
         setRegisteringActivity(true);
     }
     const closeRegisterActivityDialog = (event: React.MouseEvent<HTMLButtonElement>) => {
         setRegisteringActivity(false);
         if (event.currentTarget.id === 'register') {
-            const currentActivitySet = getActivitiesForDay(currentlyOpenedDay - 1, availableActivities);
+            const currentActivitySet = getActivitiesForDay(currentlyOpenedDay, availableActivities);
             if (typeof currentActivitySet !== 'undefined') {
                 for (const act of currentActivitySet) {
                     if (act.activity === selectedActivityForRegistration) {
@@ -66,8 +66,8 @@ export function Calendar() {
     }
 
     const days = [];
-    for (let i = 1; i <= 24; i++) {
-        days.push(new Date(`2021-12-${i}`));
+    for (let i = 0; i < 24; i++) {
+        days.push(i);
     }
     return (
         <div>
@@ -88,7 +88,7 @@ export function Calendar() {
             <DialogContentText>
                 Activities available to choose from today are:
             </DialogContentText>
-            { CurrentDayActivities(currentlyOpenedDay - 1, availableActivities, selectedActivityForRegistration, setSelectedActivityForRegistration) }
+            { CurrentDayActivities(currentlyOpenedDay, availableActivities, selectedActivityForRegistration, setSelectedActivityForRegistration) }
             </DialogContent>
             <DialogActions>
             <Button onClick={closeRegisterActivityDialog} id='cancel'>Cancel</Button>
@@ -123,13 +123,13 @@ function CurrentDayActivities(dayOfDecZeroIndexed: number, availableActivities: 
     );
 }
 
-function renderDay(day: Date, openRegisterActivityDialog: (day: Date) => void, loggedActivities: LoggedActivityInfo[]): React.ReactFragment {
+function renderDay(day: number, openRegisterActivityDialog: (day: number) => void, loggedActivities: LoggedActivityInfo[]): React.ReactFragment {
     const locked: boolean = isLocked(day);
     const loggedActivity = getLoggedActivityInfo(day, loggedActivities);
     return (
         <div className="calendar-day">
             <Paper elevation={10} >
-                <IconButton color="primary" aria-label="open-day" onClick={locked ? clickedDay : () => openRegisterActivityDialog(day) } id={day.toISOString()}>
+                <IconButton color="primary" aria-label="open-day" onClick={locked ? clickedDay : () => openRegisterActivityDialog(day) } id={day.toString()}>
                     { locked ? 
                             <LockIcon></LockIcon>
                         :
@@ -139,7 +139,7 @@ function renderDay(day: Date, openRegisterActivityDialog: (day: Date) => void, l
                             <LockOpenIcon></LockOpenIcon>
                     }
                 </IconButton>
-                {day.getDate() }
+                { day + 1 }
             </Paper>
         </div>
     );
@@ -156,19 +156,19 @@ function getActivitiesForDay(dayOfDecZeroIndexed: number, availableActivities: A
     return undefined;
 }
 
-function isLocked(day: Date): boolean {
-    return day.getTime() > getCurrentDay().getTime();
+function isLocked(day: number): boolean {
+    return day > getCurrentDay();
 }
 
 function clickedDay(event: React.MouseEvent<HTMLButtonElement>) {
-    let clickedDate = new Date(event.currentTarget.id);
+    let clickedDate = Number.parseInt(event.currentTarget.id);
     if (!isLocked(clickedDate)) {
         alert('hmmm!');
 
     }
 }
 
-function getCurrentDay(): Date {
+function getCurrentDay(): number {
     // TODO Dummy-date for testing, use actual new Date(); once we are done testing
-    return new Date("2021-12-11"); // Unlock a few days for testing
+    return 10; // Unlock a few days for testing
 }
