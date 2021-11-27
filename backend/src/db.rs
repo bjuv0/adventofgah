@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
 use anyhow::Result;
+use chrono::NaiveDate;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 use rusqlite::Connection;
@@ -79,8 +80,20 @@ pub struct Db {
     conn: Connection,
 }
 
+fn today_unsafe() -> i32 {
+    let start = NaiveDate::from_ymd(2021, 12, 1).and_hms(0, 0, 0);
+    chrono::offset::Local::now()
+        .naive_local()
+        .signed_duration_since(start)
+        .num_days() as i32
+}
+
 pub fn today() -> i32 {
-    10
+    today_unsafe().max(0).min(23) as i32
+}
+
+fn not_yet_started() -> bool {
+    today_unsafe() < 0
 }
 
 fn multiplier(act: Activity) -> i32 {
@@ -317,6 +330,9 @@ impl Db {
     }
 
     pub fn get_available_activities(&self) -> Result<Vec<Vec<ActivityInfo>>> {
+        if not_yet_started() {
+            return Ok(vec![vec![]]);
+        }
         let mut query = self
             .conn
             .prepare("SELECT * FROM EVENT WHERE id <= (?)")
@@ -365,7 +381,11 @@ impl Db {
     }
 
     pub fn add_activity(&self, user: Uuid, day: i32, info: ActivityInfo) -> Result<()> {
-        if day > today() {
+        if day < 0 || day > 23 {
+            return Err(anyhow::anyhow!(format!("Bad input day: {}", day)));
+        }
+
+        if not_yet_started() || day > today() {
             return Err(anyhow::anyhow!("Can not set activities in the future"));
         }
 
