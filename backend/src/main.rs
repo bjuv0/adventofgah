@@ -65,7 +65,7 @@ async fn add_activity(db: Db, user: Uuid, body: Body) -> Result<Response> {
     let bytes = hyper::body::to_bytes(body).await?;
     let data: ActivityPutData = serde_json::from_slice(&bytes)?;
     db.add_activity(user, data.day, data.info)?;
-    Ok(Response::new(Body::empty()))
+    Ok(Response::new(Body::from("{}")))
 }
 
 fn unknown_path(req: Request<hyper::Body>) -> Result<Response> {

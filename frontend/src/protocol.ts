@@ -17,7 +17,7 @@ export type ClientCalendarRequest = CalendarGetRequest;
 export type ServerCalendarResponse = CalendarResponse;
 
 // Used for /log-activity
-export type ClientLogActivityRequest = ActivityPutRequest; // No response except HTTP 200
+export type ClientLogActivityRequest = LoggedActivityInfo; // No response except HTTP 200
 
 
 // Type definitions below
@@ -49,7 +49,7 @@ interface Range {
     end?: number;
 }
 
-export type Activity = 'BIKE' | 'RUN';
+export type Activity = 'BIKE' | 'RUN' | 'WALK' | 'SKI';
 
 export interface ActivityInfo {
     activity: Activity;
@@ -64,10 +64,6 @@ export interface LoggedActivityInfo {
 interface CalendarGetRequest {
     get_available_activities: boolean;  // If true in request, response should contain "CalendarResponse.available_activities"
     get_logged_activities: boolean;     // If true in request, response should contain "CalendarResponse.logged_activities"
-}
-
-interface ActivityPutRequest {
-    log_activity?: LoggedActivityInfo;  // If present, should be saved in the DB
 }
 
 interface CalendarResponse {

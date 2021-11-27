@@ -1,6 +1,6 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from "@mui/material";
 import React from "react";
-import { ClientLoginRequest, ServerLoginResponse } from "./protocol";
+import { ClientLoginRequest, ServerLoginResponse, ServerRegisterUserResponse } from "./protocol";
 import { POST, PUT } from "./transport";
 import './user.css';
 import { Md5 } from 'ts-md5/dist/md5';
@@ -114,7 +114,7 @@ function LoginDialog(loginDialogOpen: boolean, isLoginKind: boolean,
                 if (currentTargetId === 'login') {
                     reply = await POST<ServerLoginResponse>('/login', JSON.stringify(req));
                 } else {
-                    reply = await PUT<ServerLoginResponse>('/register-user', JSON.stringify(req));
+                    reply = await PUT<ServerRegisterUserResponse>('/register-user', JSON.stringify(req));
                 }
 
                 console.log("Received session_key: " + reply.session_key);
