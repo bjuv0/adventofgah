@@ -45,7 +45,7 @@ export function Leaderboard() {
                             rows.map(row => (
                                 <StyledTableRow key={row.username}>
                                     <StyledTableCell component='th' scope='row'>{row.username}</StyledTableCell>
-                                    <StyledTableCell>{row.points}</StyledTableCell>
+                                    <StyledTableCell>{Math.round(row.points*100)/100}</StyledTableCell>
                                     <StyledTableCell align='right'>{row.bike_dst}</StyledTableCell>
                                     <StyledTableCell align='right'>{row.run_dst}</StyledTableCell>
                                     <StyledTableCell align='right'>{row.walk_dst}</StyledTableCell>

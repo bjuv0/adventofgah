@@ -28,11 +28,13 @@ function refreshCalendar(setAvailableActivities: (activities: Array<ActivityInfo
 
 export function Calendar() {
     const [registeringActivity, setRegisteringActivity] = React.useState(false);
-    const [currentlyOpenedDay, setCurrentlyOpenedDay] = React.useState(0);
+    const [currentlyOpenedDay, setCurrentlyOpenedDay] = React.useState(-1);
     const [loggedActivities, setLoggedActivities] = React.useState<LoggedActivityInfo[]>([]);
     const [availableActivities, setAvailableActivities] = React.useState<Array<ActivityInfo[]>>([]);
     const [selectedActivityForRegistration, setSelectedActivityForRegistration] = React.useState<Activity>('RUN');
     const [activityDistanceForRegistration, setActivityDistanceForRegistration] = React.useState<string>('');
+
+    const todayActivities = getActivitiesForDay(currentlyOpenedDay, availableActivities);
 
     let parsedDistance = -1;
     let validDistance = false;
@@ -106,7 +108,7 @@ export function Calendar() {
             <DialogContentText>
                 Activities available to choose from today are:
             </DialogContentText>
-            { CurrentDayActivities(currentlyOpenedDay, availableActivities, selectedActivityForRegistration, setSelectedActivityForRegistration) }
+            { CurrentDayActivities(currentlyOpenedDay, todayActivities, selectedActivityForRegistration, setSelectedActivityForRegistration) }
             <TextField
                     autoFocus
                     margin='dense'
@@ -120,16 +122,14 @@ export function Calendar() {
             </DialogContent>
             <DialogActions>
             <Button onClick={closeRegisterActivityDialog} id='cancel'>Cancel</Button>
-            <Button onClick={closeRegisterActivityDialog} id='register' disabled={!validDistance}>Log</Button>
+            <Button onClick={closeRegisterActivityDialog} id='register' disabled={!(validDistance && typeof todayActivities !== 'undefined' && todayActivities.length > 0)}>Log</Button>
             </DialogActions>
         </Dialog>
         </div>
     );
 }
 
-function CurrentDayActivities(dayOfDecZeroIndexed: number, availableActivities: Array<ActivityInfo[]>, selectedActivity: Activity, setSelectedActivity: (activity: Activity) => void): React.ReactFragment {
-    const todayActivities = getActivitiesForDay(dayOfDecZeroIndexed, availableActivities);
-
+function CurrentDayActivities(dayOfDecZeroIndexed: number, todayActivities: ActivityInfo[] | undefined, selectedActivity: Activity, setSelectedActivity: (activity: Activity) => void): React.ReactFragment {
     const handleChangedActivity = (event: any, newActivity: Activity) => {
         setSelectedActivity(newActivity);
     }
@@ -197,6 +197,14 @@ function clickedDay(event: React.MouseEvent<HTMLButtonElement>) {
 }
 
 function getCurrentDay(): number {
-    // TODO Dummy-date for testing, use actual new Date(); once we are done testing
-    return 10; // Unlock a few days for testing
+    const dec1 = new Date('2021-12-01');
+    const dec25 = new Date('2021-12-25');
+    const today = new Date();
+    if (today.getTime() < dec1.getTime()) {
+        return -1;
+    } else if (today.getTime() > dec25.getTime()) {
+        return 23;
+    } else {
+        return today.getDate() - 1;
+    }
 }
