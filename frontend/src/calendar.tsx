@@ -92,15 +92,17 @@ export function Calendar() {
     return (
         <div>
         <table>
-            <tr>
-                { days.slice(0, 8).map(d => (<td>{renderDay(d, openRegisterActivityDialog, loggedActivities)}</td>)) }
-            </tr>
-            <tr>
-                { days.slice(8, 16).map(d => (<td>{renderDay(d, openRegisterActivityDialog, loggedActivities)}</td>)) }
-            </tr>
-            <tr>
-                { days.slice(16, 24).map(d => (<td>{renderDay(d, openRegisterActivityDialog, loggedActivities)}</td>)) }
-            </tr>
+            <tbody>
+                <tr>
+                    { days.slice(0, 8).map(d => (<td key={d.toString()}>{renderDay(d, openRegisterActivityDialog, loggedActivities)}</td>)) }
+                </tr>
+                <tr>
+                    { days.slice(8, 16).map(d => (<td key={d.toString()}>{renderDay(d, openRegisterActivityDialog, loggedActivities)}</td>)) }
+                </tr>
+                <tr>
+                    { days.slice(16, 24).map(d => (<td key={d.toString()}>{renderDay(d, openRegisterActivityDialog, loggedActivities)}</td>)) }
+                </tr>
+            </tbody>
         </table>
         <Dialog open={registeringActivity} onClose={closeRegisterActivityDialog}>
             <DialogTitle>Register activity</DialogTitle>
