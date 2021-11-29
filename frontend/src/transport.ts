@@ -3,7 +3,7 @@ import { ActivityInfo, LoggedActivityInfo, ServerCalendarResponse, } from './pro
 import { getUserState } from './user';
 // Implementation of network protocol here
 
-const SERVER_BASE_URL = 'http://localhost:3000';
+const SERVER_BASE_URL = 'http://localhost:3000/api';
 
 
 export function getLoggedActivityInfo(day: number, loggedActivities: LoggedActivityInfo[]): ActivityInfo | undefined {

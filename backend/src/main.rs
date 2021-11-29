@@ -78,32 +78,32 @@ async fn handle_request(req: Request<hyper::Body>) -> Result<Response> {
         let user = db.get_user_from_session(auth.to_str()?.into())?;
         match req.method().to_owned() {
             Method::PUT => match req.uri().path() {
-                "/log-activity" => add_activity(db, user, req.into_body()).await,
+                "/api/log-activity" => add_activity(db, user, req.into_body()).await,
                 _ => unknown_path(req),
             },
             Method::GET => match req.uri().path() {
-                "/leaderboard" => {
+                "/api/leaderboard" => {
                     let lb = db.get_leaderboard()?;
                     ok_string(serde_json::to_string(&lb)?)
                 }
-                "/calendar" => {
+                "/api/calendar" => {
                     let aa = db.get_available_activities()?;
                     let la = db.get_logged_activities(user)?;
                     let data = json!({"available_activities" : aa, "logged_activities" : la});
                     ok_json(data)
                 }
-                "/today" => ok_json(json!({ "day": db::today() })),
+                "/api/today" => ok_json(json!({ "day": db::today() })),
                 _ => unknown_path(req),
             },
             _ => Ok(nok_reason(format!("Method {} not allowed", req.method()))),
         }
     } else {
         match req.uri().path() {
-            "/register-user" => match req.method().to_owned() {
+            "/api/register-user" => match req.method().to_owned() {
                 Method::PUT => reg_login(req.into_body(), true).await,
                 _ => wrong_method(req),
             },
-            "/login" => match req.method().to_owned() {
+            "/api/login" => match req.method().to_owned() {
                 Method::POST => reg_login(req.into_body(), false).await,
                 _ => wrong_method(req),
             },
