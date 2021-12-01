@@ -524,17 +524,22 @@ impl Db {
         };
 
         for achievement in all {
-            println!("{:?}", achievement);
+            let unlocked = match achievement.achievement_type {
+                AchievementType::Streak(times, activity) => false, /* TBD */
+                AchievementType::UnlockType(types) => activity_counts.len() >= types,
+                AchievementType::ActivityCount(times, activity) => {
+                    *activity_counts.entry(activity).or_default() >= times
+                }
+            };
+
+            if unlocked {
+                achievements.unlocked += 1;
+            }
+
             achievements.achievements.push(Achievement {
                 title: achievement.title,
                 description: achievement.description,
-                unlocked: match achievement.achievement_type {
-                    AchievementType::Streak(times, activity) => false, /* TBD */
-                    AchievementType::UnlockType(types) => activity_counts.len() >= types,
-                    AchievementType::ActivityCount(times, activity) => {
-                        *activity_counts.entry(activity).or_default() >= times
-                    }
-                },
+                unlocked,
             })
         }
 
