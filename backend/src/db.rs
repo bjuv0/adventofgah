@@ -461,6 +461,7 @@ impl Db {
         enum AchievementType {
             UnlockType(usize),
             Streak(i32, Activity),
+            Distance(f64, Activity),
             ActivityCount(i32, Activity),
         }
 
@@ -507,6 +508,91 @@ impl Db {
                 description: "Register ten walk activities".to_string(),
                 achievement_type: AchievementType::ActivityCount(10, Activity::WALK),
             },
+            AchievementData {
+                title: "Run forrest run".to_string(),
+                description: "Register one run activity".to_string(),
+                achievement_type: AchievementType::ActivityCount(1, Activity::RUN),
+            },
+            AchievementData {
+                title: "Keep on running".to_string(),
+                description: "Register three run activities".to_string(),
+                achievement_type: AchievementType::ActivityCount(3, Activity::RUN),
+            },
+            AchievementData {
+                title: "Run to the hills".to_string(),
+                description: "Register six run activities".to_string(),
+                achievement_type: AchievementType::ActivityCount(6, Activity::RUN),
+            },
+            AchievementData {
+                title: "No one can stop you".to_string(),
+                description: "Register ten run activities".to_string(),
+                achievement_type: AchievementType::ActivityCount(10, Activity::RUN),
+            },
+            AchievementData {
+                title: "I want to ride my bicycle".to_string(),
+                description: "Register one bike activity".to_string(),
+                achievement_type: AchievementType::ActivityCount(1, Activity::BIKE),
+            },
+            AchievementData {
+                title: "Saddle sore".to_string(),
+                description: "Register three bike activities".to_string(),
+                achievement_type: AchievementType::ActivityCount(3, Activity::BIKE),
+            },
+            AchievementData {
+                title: "It's leg day".to_string(),
+                description: "Register six bike activities".to_string(),
+                achievement_type: AchievementType::ActivityCount(6, Activity::BIKE),
+            },
+            AchievementData {
+                title: "The pain cave is my home".to_string(),
+                description: "Register ten bike activities".to_string(),
+                achievement_type: AchievementType::ActivityCount(10, Activity::BIKE),
+            },
+            AchievementData {
+                title: "Let it snow".to_string(),
+                description: "Register one ski activity".to_string(),
+                achievement_type: AchievementType::ActivityCount(1, Activity::SKI),
+            },
+            AchievementData {
+                title: "Double pole is the shit".to_string(),
+                description: "Register three ski activities".to_string(),
+                achievement_type: AchievementType::ActivityCount(3, Activity::SKI),
+            },
+            AchievementData {
+                title: "Need more wax".to_string(),
+                description: "Register six ski activities".to_string(),
+                achievement_type: AchievementType::ActivityCount(6, Activity::SKI),
+            },
+            AchievementData {
+                title: "Swix blue extra for breakfast".to_string(),
+                description: "Register ten ski activities".to_string(),
+                achievement_type: AchievementType::ActivityCount(10, Activity::SKI),
+            },
+            AchievementData {
+                title: "Half marathon".to_string(),
+                description: "Register 21k running".to_string(),
+                achievement_type: AchievementType::Distance(21.0, Activity::RUN),
+            },
+            AchievementData {
+                title: "Marathon".to_string(),
+                description: "Register 42k running".to_string(),
+                achievement_type: AchievementType::Distance(42.0, Activity::RUN),
+            },
+            AchievementData {
+                title: "Century ride".to_string(),
+                description: "Register 100k cycle".to_string(),
+                achievement_type: AchievementType::Distance(100.0, Activity::BIKE),
+            },
+            AchievementData {
+                title: "VR315".to_string(),
+                description: "Register 315k cycle".to_string(),
+                achievement_type: AchievementType::Distance(315.0, Activity::BIKE),
+            },
+            AchievementData {
+                title: "Vasaloppet".to_string(),
+                description: "Register 90k skiing".to_string(),
+                achievement_type: AchievementType::Distance(90.0, Activity::SKI),
+            },
         ];
 
         let activities = self.user_activities(user)?;
@@ -530,6 +616,12 @@ impl Db {
                 AchievementType::ActivityCount(times, activity) => {
                     *activity_counts.entry(activity).or_default() >= times
                 }
+                AchievementType::Distance(distance, activity) => match activity {
+                    Activity::BIKE => lb.bike_dst >= distance,
+                    Activity::SKI => lb.ski_dst >= distance,
+                    Activity::RUN => lb.run_dst >= distance,
+                    Activity::WALK => lb.run_dst >= distance,
+                },
             };
 
             if unlocked {
