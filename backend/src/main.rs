@@ -86,6 +86,10 @@ async fn handle_request(req: Request<hyper::Body>) -> Result<Response> {
                     let lb = db.get_leaderboard()?;
                     ok_string(serde_json::to_string(&lb)?)
                 }
+                "/api/achievements" => {
+                    let a = db.get_acheivements(user)?;
+                    ok_string(serde_json::to_string(&a)?)
+                }
                 "/api/calendar" => {
                     let aa = db.get_available_activities()?;
                     let la = db.get_logged_activities(user)?;

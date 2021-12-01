@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{collections::HashMap, str::FromStr};
 
 use anyhow::Result;
 use chrono::NaiveDate;
@@ -41,7 +41,7 @@ pub struct LeaderBoardInfo {
     details: Vec<LeaderboardDetail>,
 }
 
-#[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialEq, EnumIter)]
+#[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialEq, EnumIter, Hash, Eq)]
 pub enum Activity {
     BIKE = 0,
     RUN = 1,
@@ -74,6 +74,20 @@ pub struct ActivityRecord {
     activity: Activity,
     score: f64,
     distance: f64,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct Achievements {
+    total: i32,
+    unlocked: i32,
+    achievements: Vec<Achievement>,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct Achievement {
+    title: String,
+    description: String,
+    unlocked: bool,
 }
 
 pub struct Db {
@@ -361,14 +375,10 @@ impl Db {
     }
 
     pub fn get_logged_activities(&self, user: Uuid) -> Result<Vec<LoggedActivityInfo>> {
-        let mut query = self
-            .conn
-            .prepare("SELECT * FROM ACTIVITYRECORD WHERE user = (?)")
-            .unwrap();
-        let res = from_rows::<ActivityRecord>(query.query([user.to_string()]).unwrap());
+        let db_activities = self.user_activities(user)?;
+
         let mut activities: Vec<LoggedActivityInfo> = Vec::new();
-        for a in res {
-            let a = a?;
+        for a in db_activities {
             activities.push(LoggedActivityInfo {
                 day: a.event_id,
                 info: ActivityInfo {
@@ -431,5 +441,103 @@ impl Db {
             .unwrap();
 
         Ok(())
+    }
+
+    fn user_activities(&self, user: Uuid) -> Result<Vec<ActivityRecord>> {
+        let mut query = self
+            .conn
+            .prepare("SELECT * FROM ACTIVITYRECORD WHERE user = (?)")
+            .unwrap();
+        let res = from_rows::<ActivityRecord>(query.query([user.to_string()]).unwrap());
+        let mut activities: Vec<ActivityRecord> = Vec::new();
+        for activity in res {
+            activities.push(activity?);
+        }
+        Ok(activities)
+    }
+
+    pub fn get_acheivements(&self, user: Uuid) -> Result<Achievements> {
+        #[derive(Debug)]
+        enum AchievementType {
+            UnlockType(usize),
+            Streak(i32, Activity),
+            ActivityCount(i32, Activity),
+        }
+
+        #[derive(Debug)]
+        struct AchievementData {
+            title: String,
+            description: String,
+            achievement_type: AchievementType,
+        }
+
+        let all = vec![
+            AchievementData {
+                title: "Game on".to_string(),
+                description: "Register one activity".to_string(),
+                achievement_type: AchievementType::UnlockType(1),
+            },
+            AchievementData {
+                title: "Alternative training".to_string(),
+                description: "Register two different activity types".to_string(),
+                achievement_type: AchievementType::UnlockType(2),
+            },
+            AchievementData {
+                title: "Multisport master".to_string(),
+                description: "Register all different activity types".to_string(),
+                achievement_type: AchievementType::UnlockType(4),
+            },
+            AchievementData {
+                title: "Walk of life".to_string(),
+                description: "Register one walk activity".to_string(),
+                achievement_type: AchievementType::ActivityCount(1, Activity::WALK),
+            },
+            AchievementData {
+                title: "Keep on walking".to_string(),
+                description: "Register three walk activities".to_string(),
+                achievement_type: AchievementType::ActivityCount(3, Activity::WALK),
+            },
+            AchievementData {
+                title: "Walk this way".to_string(),
+                description: "Register six walk activities".to_string(),
+                achievement_type: AchievementType::ActivityCount(6, Activity::WALK),
+            },
+            AchievementData {
+                title: "Moon walker".to_string(),
+                description: "Register ten walk activities".to_string(),
+                achievement_type: AchievementType::ActivityCount(10, Activity::WALK),
+            },
+        ];
+
+        let activities = self.user_activities(user)?;
+        let lb = self.get_user_leaderboard_entry(user.to_string())?;
+        let mut activity_counts = HashMap::new();
+        for activity in activities {
+            let count = activity_counts.entry(activity.activity).or_insert(0);
+            *count += 1;
+        }
+
+        let mut achievements = Achievements {
+            total: all.len() as i32,
+            unlocked: 0,
+            achievements: Vec::new(),
+        };
+
+        for achievement in all {
+            println!("{:?}", achievement);
+            achievements.achievements.push(Achievement {
+                title: achievement.title,
+                description: achievement.description,
+                unlocked: match achievement.achievement_type {
+                    AchievementType::Streak(times, activity) => false, /* TBD */
+                    AchievementType::UnlockType(types) => activity_counts.len() >= types,
+                    AchievementType::ActivityCount(times, activity) => {
+                        *activity_counts.entry(activity).or_default() >= times
+                    }
+                },
+            })
+        }
+
+        Ok(achievements)
     }
 }
