@@ -1,0 +1,28 @@
+name: Build backend
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'backend/**'
+  pull_request:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-18.04
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build
+      run: cd backend && cargo build --verbose --release
+    - name: Run tests
+      run: cd backend && cargo test --verbose
+    - uses: actions/upload-artifact@v2
+      with:
+        name: backend
+        path: backend/target/release/backend
