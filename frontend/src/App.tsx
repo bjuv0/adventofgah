@@ -5,6 +5,7 @@ import AcUnitIcon from '@mui/icons-material/AcUnit';
 import { UserBar } from './user';
 import React from 'react';
 import { Leaderboard } from './leaderboard';
+import { AchievementsComponent } from './achievements';
 
 function App() {
   const darkTheme = createTheme({
@@ -31,12 +32,16 @@ function App() {
             <ToggleButtonGroup color="primary" value={selectedPage} exclusive onChange={handleChangePage} >
                 <ToggleButton value="calendar">Calendar</ToggleButton>
                 <ToggleButton value="leaderboard">Leaderboard</ToggleButton>
+                <ToggleButton value="achievements">Achievements</ToggleButton>
             </ToggleButtonGroup>
             <br />
             { selectedPage === 'calendar' ?
                 <Calendar />
               :
-                <Leaderboard />
+                selectedPage === 'leaderboard' ?
+                    <Leaderboard />
+                  :
+                  <AchievementsComponent />
             }
           </div>
           <UserBar />

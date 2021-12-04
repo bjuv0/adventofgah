@@ -1,5 +1,5 @@
 
-import { ActivityInfo, LoggedActivityInfo, ServerCalendarResponse, } from './protocol';
+import { ActivityInfo, LoggedActivityInfo, ServerCalendarResponse, GetRoutes } from './protocol';
 import { getUserState } from './user';
 // Implementation of network protocol here
 
@@ -25,7 +25,7 @@ export async function getCalendarInfo(): Promise<ServerCalendarResponse> {
 }
 
 
-export async function GET<T>(route: string): Promise<T> {
+export async function GET<T>(route: GetRoutes): Promise<T> {
     return new Promise<T>(async (resolve, reject) => {
         const extra_headers = getExtraHeaders();
         try {

@@ -19,6 +19,12 @@ export type ServerCalendarResponse = CalendarResponse;
 // Used for /log-activity
 export type ClientLogActivityRequest = LoggedActivityInfo; // No response except HTTP 200
 
+// Used for /achievements
+export type ServerAchievementsResponse = Achievements;
+
+// Routes
+export type GetRoutes = '/calendar' | '/leaderboard' | '/achievements';
+
 
 // Type definitions below
 
@@ -71,4 +77,16 @@ interface CalendarGetRequest {
 interface CalendarResponse {
     available_activities?: Array<ActivityInfo[]>;
     logged_activities?: LoggedActivityInfo[];
+}
+
+export interface Achievement {
+    title: string;
+    description: string;
+    unlocked: boolean;
+}
+
+export interface Achievements {
+    total: number;
+    unlocked: number;
+    achievements: Achievement[]
 }

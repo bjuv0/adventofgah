@@ -24,7 +24,7 @@ export function Leaderboard() {
                 })
                 .catch(error => console.error(`Failed to get leaderboard info: ${error}`));
         }
-    }, 50);
+    });
 
     return (
         <div>
