@@ -3,9 +3,16 @@ import React from "react";
 import { Achievement, Achievements, ServerAchievementsResponse } from "./protocol";
 import { GET } from "./transport";
 import './achievements.css';
+import { isUserLoggedIn } from "./user";
 
 export function AchievementsComponent() {
     const [data, setData] = React.useState<Achievements | undefined>(undefined);
+
+    if (!isUserLoggedIn()) {
+        return (
+            <div>Please log in first</div>
+        );
+    }
 
     if (typeof data === 'undefined') {
         setTimeout(async () => {

@@ -21,12 +21,15 @@ function storeUserState() {
     localStorage.setItem('user_state', JSON.stringify(userState));
 }
 
+export function isUserLoggedIn(): boolean {
+    return typeof getUserState().session_key === 'string';
+}
 
 export function UserBar() {
     const [loginDialogOpen, setLoginDialogOpen] = React.useState(false);
     const [welcomeDialogOpen, setWelcomeDialogOpen] = React.useState(false);
     const [isLoginKind, setIsLoginKind] = React.useState(false);
-    const [isLoggedIn, setIsLoggedIn] = React.useState(typeof getUserState().session_key === 'string');
+    const [isLoggedIn, setIsLoggedIn] = React.useState(isUserLoggedIn());
 
 
     const openLoginDialog = () => {
@@ -162,4 +165,3 @@ function LoginDialog(loginDialogOpen: boolean, isLoginKind: boolean,
         </Dialog>
     );
 }
-
