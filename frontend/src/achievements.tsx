@@ -18,6 +18,7 @@ export function AchievementsComponent() {
         });
     }
 
+    let unlockedNumCounter = 0;
     return (
     <div>
         <br />
@@ -32,15 +33,20 @@ export function AchievementsComponent() {
             typeof data === 'undefined' ?
                 <br />
             :
-                data.achievements.map(a => renderAchievement(a))
+                data.achievements.map(a => {
+                    if (a.unlocked) {
+                        unlockedNumCounter++;
+                    }
+                    return renderAchievement(a, unlockedNumCounter);
+                })
         }
     </div>
     )
 }
 
-function renderAchievement(achievement: Achievement): React.ReactFragment {
+function renderAchievement(achievement: Achievement, unlockedNum: number): React.ReactFragment {
     return (
-        <div className={achievement.unlocked ? "achievement-unlocked" : "achievement-locked" } key={achievement.title}>
+        <div className={achievement.unlocked ? "achievement-unlocked" : "achievement-locked" } key={achievement.title} style={{animationDelay: `${unlockedNum * 0.1}s`}}>
             <Paper elevation={10} >
                 <Typography variant="caption" component="div" color="text.primary">{achievement.title}</Typography>
                 <Typography variant="caption" component="div" color="text.secondary">{achievement.description}</Typography>

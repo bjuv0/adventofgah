@@ -22,7 +22,9 @@
 .achievement-unlocked {
     margin: 15px;
     animation-name: achievementunlockedanimation;
-    animation-duration: 1.5s;
+    animation-duration: 0.4s;
+    animation-fill-mode: forwards;
+    opacity: 0.0;
 }
 
 .achievement-locked {

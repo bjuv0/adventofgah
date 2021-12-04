@@ -26,3 +26,8 @@
   text-align: left;
   margin: 5px;
 }
+
+html body {
+  overflow-x: hidden;
+  position: relative;
+}
