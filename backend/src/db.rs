@@ -89,7 +89,7 @@ pub struct Achievements {
     achievements: Vec<Achievement>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct Achievement {
     title: String,
     description: String,
@@ -416,7 +416,7 @@ impl Db {
         Ok(activities)
     }
 
-    pub fn add_activity(&self, user: Uuid, day: i32, info: ActivityInfo) -> Result<()> {
+    pub fn add_activity(&self, user: Uuid, day: i32, info: ActivityInfo) -> Result<Achievements> {
         if day < 0 || day > 23 {
             return Err(anyhow::anyhow!(format!("Bad input day: {}", day)));
         }
@@ -459,6 +459,8 @@ impl Db {
             distance: covered_dist,
         };
 
+        let achievements_before = self.get_acheivements(user)?;
+
         self.conn
             .execute(
                 "INSERT INTO ACTIVITYRECORD (user, event_id, activity, score, distance) VALUES (:user, :event_id, :activity, :score, :distance)",
@@ -466,7 +468,40 @@ impl Db {
             )
             .unwrap();
 
-        Ok(())
+        let achievements_after = self.get_acheivements(user)?;
+
+        if achievements_after.unlocked != achievements_before.unlocked {
+            let mut new_achievements = Vec::new();
+            for after in &achievements_after.achievements {
+                if !after.unlocked {
+                    continue;
+                }
+                let mut new = true;
+                for before in &achievements_before.achievements {
+                    if !before.unlocked {
+                        continue;
+                    }
+                    if before.title == after.title {
+                        new = false;
+                        break;
+                    }
+                }
+                if new {
+                    new_achievements.push(after.clone());
+                }
+            }
+            Ok(Achievements {
+                total: new_achievements.len() as i32,
+                unlocked: new_achievements.len() as i32,
+                achievements: new_achievements,
+            })
+        } else {
+            Ok(Achievements {
+                total: 0,
+                unlocked: 0,
+                achievements: Vec::new(),
+            })
+        }
     }
 
     fn user_activities(&self, user: Uuid) -> Result<Vec<ActivityRecord>> {
