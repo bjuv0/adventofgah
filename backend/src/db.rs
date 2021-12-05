@@ -34,6 +34,10 @@ pub struct LeaderboardDetail {
     walk_dst: f64,
     run_dst: f64,
     ski_dst: f64,
+    bronze_achievements: i32,
+    silver_achievements: i32,
+    gold_achievements: i32,
+    diamond_achievements: i32,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -308,6 +312,10 @@ impl Db {
             walk_dst: 0.0,
             run_dst: 0.0,
             ski_dst: 0.0,
+            bronze_achievements: 0,
+            silver_achievements: 0,
+            gold_achievements: 0,
+            diamond_achievements: 0,
         };
 
         let mut query = self
@@ -329,7 +337,18 @@ impl Db {
     }
 
     fn get_user_leaderboard_entry(&self, user: String) -> Result<LeaderboardDetail> {
-        let entry = self.get_user_leaderboard_distances_and_score(user)?;
+        let mut entry = self.get_user_leaderboard_distances_and_score(user.clone())?;
+        let achievements = self.get_acheivements(Uuid::from_str(&user)?)?;
+        for achievement in achievements.achievements {
+            if achievement.unlocked {
+                match achievement.rank {
+                    AchievementRank::Bronze => entry.bronze_achievements += 1,
+                    AchievementRank::Silver => entry.silver_achievements += 1,
+                    AchievementRank::Gold => entry.gold_achievements += 1,
+                    AchievementRank::Diamond => entry.diamond_achievements += 1,
+                }
+            }
+        }
         Ok(entry)
     }
 
