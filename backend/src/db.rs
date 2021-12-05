@@ -300,7 +300,7 @@ impl Db {
         Err(anyhow::anyhow!("Could not find user"))
     }
 
-    fn get_user_leaderboard_entry(&self, user: String) -> Result<LeaderboardDetail> {
+    fn get_user_leaderboard_distances_and_score(&self, user: String) -> Result<LeaderboardDetail> {
         let mut details = LeaderboardDetail {
             username: self.get_user_name(&user)?,
             points: 0.0,
@@ -325,8 +325,12 @@ impl Db {
             }
             details.points += activity.score;
         }
-
         Ok(details)
+    }
+
+    fn get_user_leaderboard_entry(&self, user: String) -> Result<LeaderboardDetail> {
+        let entry = self.get_user_leaderboard_distances_and_score(user)?;
+        Ok(entry)
     }
 
     pub fn get_leaderboard(&self) -> Result<LeaderBoardInfo> {
@@ -462,7 +466,7 @@ impl Db {
     pub fn get_acheivements(&self, user: Uuid) -> Result<Achievements> {
         let mut activities = self.user_activities(user)?;
         activities.sort_by_key(|activity| activity.event_id);
-        let lb = self.get_user_leaderboard_entry(user.to_string())?;
+        let lb = self.get_user_leaderboard_distances_and_score(user.to_string())?;
         let mut activity_counts = HashMap::new();
         let mut streaks = HashMap::new();
         let mut streak_count = 1;
