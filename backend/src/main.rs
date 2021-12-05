@@ -1,3 +1,4 @@
+mod achievements;
 mod db;
 
 use anyhow::Result;
