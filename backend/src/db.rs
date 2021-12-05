@@ -83,11 +83,20 @@ pub struct Achievements {
     achievements: Vec<Achievement>,
 }
 
+#[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialEq, EnumIter, Hash, Eq)]
+pub enum AchievementRank {
+    Bronze,
+    Silver,
+    Gold,
+    Diamond,
+}
+
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Achievement {
     title: String,
     description: String,
     unlocked: bool,
+    rank: AchievementRank,
 }
 
 pub struct Db {
@@ -469,6 +478,7 @@ impl Db {
         struct AchievementData {
             title: String,
             description: String,
+            rank: AchievementRank,
             achievement_type: AchievementType,
         }
 
@@ -476,121 +486,145 @@ impl Db {
             AchievementData {
                 title: "Game on".to_string(),
                 description: "Register one activity".to_string(),
+                rank: AchievementRank::Bronze,
                 achievement_type: AchievementType::UnlockType(1),
             },
             AchievementData {
                 title: "Alternative training".to_string(),
                 description: "Register two different activity types".to_string(),
+                rank: AchievementRank::Silver,
                 achievement_type: AchievementType::UnlockType(2),
             },
             AchievementData {
                 title: "Multisport master".to_string(),
                 description: "Register all different activity types".to_string(),
+                rank: AchievementRank::Gold,
                 achievement_type: AchievementType::UnlockType(4),
             },
             AchievementData {
                 title: "Walk of life".to_string(),
                 description: "Register one walk activity".to_string(),
+                rank: AchievementRank::Bronze,
                 achievement_type: AchievementType::ActivityCount(1, Activity::WALK),
             },
             AchievementData {
                 title: "Keep on walking".to_string(),
                 description: "Register three walk activities".to_string(),
+                rank: AchievementRank::Silver,
                 achievement_type: AchievementType::ActivityCount(3, Activity::WALK),
             },
             AchievementData {
                 title: "Walk this way".to_string(),
                 description: "Register six walk activities".to_string(),
+                rank: AchievementRank::Gold,
                 achievement_type: AchievementType::ActivityCount(6, Activity::WALK),
             },
             AchievementData {
                 title: "Moon walker".to_string(),
                 description: "Register ten walk activities".to_string(),
+                rank: AchievementRank::Diamond,
                 achievement_type: AchievementType::ActivityCount(10, Activity::WALK),
             },
             AchievementData {
                 title: "Run forrest run".to_string(),
                 description: "Register one run activity".to_string(),
+                rank: AchievementRank::Bronze,
                 achievement_type: AchievementType::ActivityCount(1, Activity::RUN),
             },
             AchievementData {
                 title: "Keep on running".to_string(),
                 description: "Register three run activities".to_string(),
+                rank: AchievementRank::Silver,
                 achievement_type: AchievementType::ActivityCount(3, Activity::RUN),
             },
             AchievementData {
                 title: "Run to the hills".to_string(),
                 description: "Register six run activities".to_string(),
+                rank: AchievementRank::Gold,
                 achievement_type: AchievementType::ActivityCount(6, Activity::RUN),
             },
             AchievementData {
                 title: "No one can stop you".to_string(),
                 description: "Register ten run activities".to_string(),
+                rank: AchievementRank::Diamond,
                 achievement_type: AchievementType::ActivityCount(10, Activity::RUN),
             },
             AchievementData {
                 title: "I want to ride my bicycle".to_string(),
                 description: "Register one bike activity".to_string(),
+                rank: AchievementRank::Bronze,
                 achievement_type: AchievementType::ActivityCount(1, Activity::BIKE),
             },
             AchievementData {
                 title: "Saddle sore".to_string(),
                 description: "Register three bike activities".to_string(),
+                rank: AchievementRank::Silver,
                 achievement_type: AchievementType::ActivityCount(3, Activity::BIKE),
             },
             AchievementData {
                 title: "It's leg day".to_string(),
                 description: "Register six bike activities".to_string(),
+                rank: AchievementRank::Gold,
                 achievement_type: AchievementType::ActivityCount(6, Activity::BIKE),
             },
             AchievementData {
                 title: "The pain cave is my home".to_string(),
                 description: "Register ten bike activities".to_string(),
+                rank: AchievementRank::Diamond,
                 achievement_type: AchievementType::ActivityCount(10, Activity::BIKE),
             },
             AchievementData {
                 title: "Let it snow".to_string(),
                 description: "Register one ski activity".to_string(),
+                rank: AchievementRank::Bronze,
                 achievement_type: AchievementType::ActivityCount(1, Activity::SKI),
             },
             AchievementData {
                 title: "Double pole is the shit".to_string(),
                 description: "Register three ski activities".to_string(),
+                rank: AchievementRank::Silver,
                 achievement_type: AchievementType::ActivityCount(3, Activity::SKI),
             },
             AchievementData {
                 title: "Need more wax".to_string(),
                 description: "Register six ski activities".to_string(),
+                rank: AchievementRank::Gold,
                 achievement_type: AchievementType::ActivityCount(6, Activity::SKI),
             },
             AchievementData {
                 title: "Swix blue extra for breakfast".to_string(),
                 description: "Register ten ski activities".to_string(),
+                rank: AchievementRank::Diamond,
                 achievement_type: AchievementType::ActivityCount(10, Activity::SKI),
             },
             AchievementData {
                 title: "Half marathon".to_string(),
                 description: "Register 21k running".to_string(),
+                rank: AchievementRank::Silver,
                 achievement_type: AchievementType::Distance(21.0, Activity::RUN),
             },
             AchievementData {
                 title: "Marathon".to_string(),
                 description: "Register 42k running".to_string(),
+                rank: AchievementRank::Gold,
                 achievement_type: AchievementType::Distance(42.0, Activity::RUN),
             },
             AchievementData {
                 title: "Century ride".to_string(),
                 description: "Register 100k cycle".to_string(),
+                rank: AchievementRank::Silver,
                 achievement_type: AchievementType::Distance(100.0, Activity::BIKE),
             },
             AchievementData {
                 title: "VR315".to_string(),
                 description: "Register 315k cycle".to_string(),
+                rank: AchievementRank::Diamond,
                 achievement_type: AchievementType::Distance(315.0, Activity::BIKE),
             },
             AchievementData {
                 title: "Vasaloppet".to_string(),
                 description: "Register 90k skiing".to_string(),
+                rank: AchievementRank::Diamond,
                 achievement_type: AchievementType::Distance(90.0, Activity::SKI),
             },
         ];
@@ -632,6 +666,7 @@ impl Db {
                 title: achievement.title,
                 description: achievement.description,
                 unlocked,
+                rank: achievement.rank,
             })
         }
 
