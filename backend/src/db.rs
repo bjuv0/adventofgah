@@ -67,7 +67,7 @@ pub struct Event {
     distance: i32,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct ActivityRecord {
     user: String,
     event_id: i32,
@@ -627,14 +627,105 @@ impl Db {
                 rank: AchievementRank::Diamond,
                 achievement_type: AchievementType::Distance(90.0, Activity::SKI),
             },
+            AchievementData {
+                title: "Run x3".to_string(),
+                description: "Three running days in a row".to_string(),
+                rank: AchievementRank::Silver,
+                achievement_type: AchievementType::Streak(3, Activity::RUN),
+            },
+            AchievementData {
+                title: "Run x5".to_string(),
+                description: "Five running days in a row".to_string(),
+                rank: AchievementRank::Gold,
+                achievement_type: AchievementType::Streak(5, Activity::RUN),
+            },
+            AchievementData {
+                title: "Run x7".to_string(),
+                description: "Seven running days in a row".to_string(),
+                rank: AchievementRank::Diamond,
+                achievement_type: AchievementType::Streak(7, Activity::RUN),
+            },
+            AchievementData {
+                title: "Bike x3".to_string(),
+                description: "Three biking days in a row".to_string(),
+                rank: AchievementRank::Silver,
+                achievement_type: AchievementType::Streak(3, Activity::BIKE),
+            },
+            AchievementData {
+                title: "Bike x5".to_string(),
+                description: "Five biking days in a row".to_string(),
+                rank: AchievementRank::Gold,
+                achievement_type: AchievementType::Streak(5, Activity::BIKE),
+            },
+            AchievementData {
+                title: "Bike x7".to_string(),
+                description: "Seven biking days in a row".to_string(),
+                rank: AchievementRank::Diamond,
+                achievement_type: AchievementType::Streak(7, Activity::BIKE),
+            },
+            AchievementData {
+                title: "Walk x3".to_string(),
+                description: "Three walking days in a row".to_string(),
+                rank: AchievementRank::Silver,
+                achievement_type: AchievementType::Streak(3, Activity::WALK),
+            },
+            AchievementData {
+                title: "Walk x5".to_string(),
+                description: "Five walking days in a row".to_string(),
+                rank: AchievementRank::Gold,
+                achievement_type: AchievementType::Streak(5, Activity::WALK),
+            },
+            AchievementData {
+                title: "Walk x7".to_string(),
+                description: "Seven walking days in a row".to_string(),
+                rank: AchievementRank::Diamond,
+                achievement_type: AchievementType::Streak(7, Activity::WALK),
+            },
+            AchievementData {
+                title: "Ski x3".to_string(),
+                description: "Three skiing days in a row".to_string(),
+                rank: AchievementRank::Silver,
+                achievement_type: AchievementType::Streak(3, Activity::SKI),
+            },
+            AchievementData {
+                title: "Ski x5".to_string(),
+                description: "Five skiing days in a row".to_string(),
+                rank: AchievementRank::Gold,
+                achievement_type: AchievementType::Streak(5, Activity::SKI),
+            },
+            AchievementData {
+                title: "Ski x7".to_string(),
+                description: "Seven skiing days in a row".to_string(),
+                rank: AchievementRank::Diamond,
+                achievement_type: AchievementType::Streak(7, Activity::SKI),
+            },
         ];
 
-        let activities = self.user_activities(user)?;
+        let mut activities = self.user_activities(user)?;
+        activities.sort_by_key(|activity| activity.event_id);
         let lb = self.get_user_leaderboard_entry(user.to_string())?;
         let mut activity_counts = HashMap::new();
+        let mut streaks = HashMap::new();
+        let mut streak_count = 1;
+        let mut last_day: Option<ActivityRecord> = None;
         for activity in activities {
             let count = activity_counts.entry(activity.activity).or_insert(0);
             *count += 1;
+
+            if let Some(yesterday) = last_day {
+                streak_count = if yesterday.activity == activity.activity
+                    && yesterday.event_id == activity.event_id - 1
+                {
+                    streak_count + 1
+                } else {
+                    1
+                }
+            }
+
+            last_day = Some(activity.clone());
+
+            let streak = streaks.entry(activity.activity).or_insert(0);
+            *streak = *streak.max(&mut streak_count);
         }
 
         let mut achievements = Achievements {
@@ -645,7 +736,9 @@ impl Db {
 
         for achievement in all {
             let unlocked = match achievement.achievement_type {
-                AchievementType::Streak(times, activity) => false, /* TBD */
+                AchievementType::Streak(times, activity) => {
+                    *streaks.entry(activity).or_default() >= times
+                }
                 AchievementType::UnlockType(types) => activity_counts.len() >= types,
                 AchievementType::ActivityCount(times, activity) => {
                     *activity_counts.entry(activity).or_default() >= times
