@@ -5,6 +5,7 @@ import React from "react";
 import { Activity, ActivityInfo, ClientLogActivityRequest, LoggedActivityInfo, ServerCalendarResponse } from "./protocol";
 import { getCalendarInfo, getLoggedActivityInfo, PUT } from "./transport";
 import { renderActivity } from "./activity";
+import './calendar.css';
 
 let infoQuery: Promise<ServerCalendarResponse> | undefined = undefined;
 
@@ -33,6 +34,8 @@ export function Calendar() {
     const [availableActivities, setAvailableActivities] = React.useState<Array<ActivityInfo[]>>([]);
     const [selectedActivityForRegistration, setSelectedActivityForRegistration] = React.useState<Activity>('RUN');
     const [activityDistanceForRegistration, setActivityDistanceForRegistration] = React.useState<string>('');
+    const [openingDay, setOpeningDay] = React.useState<number>(-1);
+    const [closingDay, setClosingDay] = React.useState<number>(-1);
 
     const todayActivities = getActivitiesForDay(currentlyOpenedDay, availableActivities);
 
@@ -54,11 +57,16 @@ export function Calendar() {
     }, 50); // Wait until initial pageload is done, then trigger update
 
     const openRegisterActivityDialog = (day: number) => {
+        setOpeningDay(day);
+        setClosingDay(-1);
         setCurrentlyOpenedDay(day);
         setRegisteringActivity(true);
     }
     const closeRegisterActivityDialog = (event: React.MouseEvent<HTMLButtonElement>) => {
         setRegisteringActivity(false);
+        setClosingDay(openingDay);
+        // setTimeout(() => setClosingDay(-1), 400);
+        setOpeningDay(-1);
         if (event.currentTarget.id === 'register' && validDistance) {
             const currentActivitySet = getActivitiesForDay(currentlyOpenedDay, availableActivities);
             if (typeof currentActivitySet !== 'undefined') {
@@ -94,7 +102,7 @@ export function Calendar() {
         <table>
             <tbody>
                 <tr>
-                    { days.slice(0, 8).map(d => (<td key={d.toString()}>{renderDay(d, openRegisterActivityDialog, loggedActivities)}</td>)) }
+                    { days.slice(0, 8).map(d => (<td key={d.toString()} className={getOpeningClosingClassName(d, openingDay, closingDay)}>{renderDay(d, openRegisterActivityDialog, loggedActivities)}</td>)) }
                 </tr>
                 <tr>
                     { days.slice(8, 16).map(d => (<td key={d.toString()}>{renderDay(d, openRegisterActivityDialog, loggedActivities)}</td>)) }
@@ -129,6 +137,16 @@ export function Calendar() {
         </Dialog>
         </div>
     );
+}
+
+function getOpeningClosingClassName(day: number, openingDay: number, closingDay: number): string {
+    if (day === openingDay) {
+        return "calendar-opening";
+    } else if (day === closingDay) {
+        return "calendar-closing";
+    } else {
+        return "";
+    }
 }
 
 function CurrentDayActivities(dayOfDecZeroIndexed: number, todayActivities: ActivityInfo[] | undefined, selectedActivity: Activity, setSelectedActivity: (activity: Activity) => void): React.ReactFragment {
