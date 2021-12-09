@@ -44,6 +44,10 @@ export interface LeaderboardDetail {
     run_dst: number;    // Total run distance
     walk_dst: number;   // Total walk distance
     ski_dst: number;    // Total ski distance
+    bronze_achievements: number;
+    silver_achievements: number;
+    gold_achievements: number;
+    diamond_achievements: number;
 }
 
 interface LeaderboardInfo {
@@ -79,10 +83,13 @@ interface CalendarResponse {
     logged_activities?: LoggedActivityInfo[];
 }
 
+export type AchievementRank = 'BRONZE' | 'SILVER' | 'GOLD' | 'DIAMOND';
+
 export interface Achievement {
     title: string;
     description: string;
     unlocked: boolean;
+    rank: AchievementRank;
 }
 
 export interface Achievements {

@@ -1,6 +1,7 @@
 import { Paper, styled, Table, TableBody, TableContainer, TableHead, TableRow } from "@mui/material";
 import TableCell, { tableCellClasses } from '@mui/material/TableCell';
 import React from "react";
+import { renderTrophy } from "./achievementRank";
 import { LeaderboardDetail, ServerLeaderboardResponse } from "./protocol";
 import { GET } from "./transport";
 
@@ -38,6 +39,10 @@ export function Leaderboard() {
                             <StyledTableCell align='right'>Run</StyledTableCell>
                             <StyledTableCell align='right'>Walk</StyledTableCell>
                             <StyledTableCell align='right'>Ski</StyledTableCell>
+                            <StyledTableCell align='right'></StyledTableCell>
+                            <StyledTableCell align='right'></StyledTableCell>
+                            <StyledTableCell align='right'></StyledTableCell>
+                            <StyledTableCell align='right'></StyledTableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -45,11 +50,15 @@ export function Leaderboard() {
                             rows.map(row => (
                                 <StyledTableRow key={row.username}>
                                     <StyledTableCell component='th' scope='row'>{row.username}</StyledTableCell>
-                                    <StyledTableCell>{Math.round(row.points*100)/100}</StyledTableCell>
+                                    <StyledTableCell>{Math.round(row.points * 100) / 100}</StyledTableCell>
                                     <StyledTableCell align='right'>{row.bike_dst}</StyledTableCell>
                                     <StyledTableCell align='right'>{row.run_dst}</StyledTableCell>
                                     <StyledTableCell align='right'>{row.walk_dst}</StyledTableCell>
                                     <StyledTableCell align='right'>{row.ski_dst}</StyledTableCell>
+                                    <StyledTableCell align='right'>{row.bronze_achievements} {renderTrophy('BRONZE')}</StyledTableCell>
+                                    <StyledTableCell align='right'>{row.silver_achievements} {renderTrophy('SILVER')}</StyledTableCell>
+                                    <StyledTableCell align='right'>{row.gold_achievements} {renderTrophy('GOLD')}</StyledTableCell>
+                                    <StyledTableCell align='right'>{row.diamond_achievements} {renderTrophy('DIAMOND')}</StyledTableCell>
                                 </StyledTableRow>
                             ))
                         }

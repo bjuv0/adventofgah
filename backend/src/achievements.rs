@@ -3,6 +3,7 @@ use serde_derive::{Deserialize, Serialize};
 use strum_macros::EnumIter;
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialEq, EnumIter, Hash, Eq)]
+#[serde(rename_all = "UPPERCASE")]
 pub enum AchievementRank {
     Bronze,
     Silver,
