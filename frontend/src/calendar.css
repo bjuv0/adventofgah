@@ -33,3 +33,9 @@
     animation-fill-mode: forwards;
 }
 
+
+.floating-achievement {
+    position: fixed;
+    top: 0px;
+    display: inline;
+}

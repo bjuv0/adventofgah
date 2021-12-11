@@ -2,10 +2,11 @@ import { Button, Dialog, DialogActions, DialogContent, DialogContentText, Dialog
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import React from "react";
-import { Activity, ActivityInfo, ClientLogActivityRequest, LoggedActivityInfo, ServerCalendarResponse } from "./protocol";
+import { Achievement, Activity, ActivityInfo, ClientLogActivityRequest, LoggedActivityInfo, ServerCalendarResponse, ServerLogActivityResponse } from "./protocol";
 import { getCalendarInfo, getLoggedActivityInfo, PUT } from "./transport";
 import { renderActivity } from "./activity";
 import './calendar.css';
+import { renderAchievement } from "./achievements";
 
 let infoQuery: Promise<ServerCalendarResponse> | undefined = undefined;
 
@@ -36,8 +37,10 @@ export function Calendar() {
     const [activityDistanceForRegistration, setActivityDistanceForRegistration] = React.useState<string>('');
     const [openingDay, setOpeningDay] = React.useState<number>(-1);
     const [closingDay, setClosingDay] = React.useState<number>(-1);
+    const [unlockedAchievements, setUnlockedAchievements] = React.useState<Achievement[]>([]);
 
     const todayActivities = getActivitiesForDay(currentlyOpenedDay, availableActivities);
+    const alreadyLoggedActivityForOpening = loggedActivities.find(a => a.day == openingDay);
 
     let parsedDistance = -1;
     let validDistance = false;
@@ -79,7 +82,15 @@ export function Calendar() {
                                 value: parsedDistance
                             }
                         };
-                        PUT<{}>('/log-activity', JSON.stringify(req)).then(() => refreshCalendar(setAvailableActivities, setLoggedActivities))
+                        PUT<ServerLogActivityResponse>('/log-activity', JSON.stringify(req))
+                            .then(achievements => {
+                                const unlocked = achievements.achievements.filter(a => a.unlocked);
+                                if (unlocked.length > 0) {
+                                    setUnlockedAchievements(unlocked);
+                                    setTimeout(() => setUnlockedAchievements([]), 10000); // Clear achievements after 10 seconds
+                                }
+                                refreshCalendar(setAvailableActivities, setLoggedActivities)
+                            })
                             .catch(error => console.error(`Failed to log activity: ${error}`));
 
                         return;
@@ -102,39 +113,58 @@ export function Calendar() {
         <table>
             <tbody>
                 <tr>
-                    { days.slice(0, 8).map(d => (<td key={d.toString()} className={getOpeningClosingClassName(d, openingDay, closingDay)}>{renderDay(d, openRegisterActivityDialog, loggedActivities)}</td>)) }
+                    { days.slice(0, 6).map(d => (<td key={d.toString()} className={getOpeningClosingClassName(d, openingDay, closingDay)}>{renderDay(d, openRegisterActivityDialog, loggedActivities)}</td>)) }
                 </tr>
                 <tr>
-                    { days.slice(8, 16).map(d => (<td key={d.toString()}>{renderDay(d, openRegisterActivityDialog, loggedActivities)}</td>)) }
+                    { days.slice(6, 12).map(d => (<td key={d.toString()} className={getOpeningClosingClassName(d, openingDay, closingDay)}>{renderDay(d, openRegisterActivityDialog, loggedActivities)}</td>)) }
                 </tr>
                 <tr>
-                    { days.slice(16, 24).map(d => (<td key={d.toString()}>{renderDay(d, openRegisterActivityDialog, loggedActivities)}</td>)) }
+                    { days.slice(12, 18).map(d => (<td key={d.toString()} className={getOpeningClosingClassName(d, openingDay, closingDay)}>{renderDay(d, openRegisterActivityDialog, loggedActivities)}</td>)) }
+                </tr>
+                <tr>
+                    { days.slice(18, 24).map(d => (<td key={d.toString()} className={getOpeningClosingClassName(d, openingDay, closingDay)}>{renderDay(d, openRegisterActivityDialog, loggedActivities)}</td>)) }
                 </tr>
             </tbody>
         </table>
         <Dialog open={registeringActivity} onClose={closeRegisterActivityDialog}>
-            <DialogTitle>Register activity</DialogTitle>
+            <DialogTitle>Log activity</DialogTitle>
             <DialogContent>
             <DialogContentText>
                 Activities available to choose from today are:
             </DialogContentText>
             { CurrentDayActivities(currentlyOpenedDay, todayActivities, selectedActivityForRegistration, setSelectedActivityForRegistration) }
-            <TextField
-                    autoFocus
-                    margin='dense'
-                    id='distance'
-                    label='Distance'
-                    type='text'
-                    fullWidth
-                    variant="standard"
-                    onChange={handleLogActivityDistanceChanged}
-                />
+            {
+                typeof alreadyLoggedActivityForOpening !== 'undefined' ?
+                    <div>
+                        Logged
+                        {renderActivity(alreadyLoggedActivityForOpening.info.activity)}
+                        {alreadyLoggedActivityForOpening.info.value}
+                    </div>
+                 :
+                    <TextField
+                            autoFocus
+                            margin='dense'
+                            id='distance'
+                            label='Distance'
+                            type='text'
+                            fullWidth
+                            variant="standard"
+                            onChange={handleLogActivityDistanceChanged}
+                        />
+            }
             </DialogContent>
             <DialogActions>
             <Button onClick={closeRegisterActivityDialog} id='cancel'>Cancel</Button>
-            <Button onClick={closeRegisterActivityDialog} id='register' disabled={!(validDistance && typeof todayActivities !== 'undefined' && todayActivities.length > 0)}>Log</Button>
+            <Button onClick={closeRegisterActivityDialog} id='register' disabled={!(validDistance && typeof todayActivities !== 'undefined' && todayActivities.length > 0) || typeof alreadyLoggedActivityForOpening !== 'undefined'}>Log</Button>
             </DialogActions>
         </Dialog>
+        {
+            unlockedAchievements.length > 0 ?
+                <div className="floating-achievement">
+                    { unlockedAchievements.map((a, i) => renderAchievement(a, i)) }
+                </div>
+                : ""
+        }
         </div>
     );
 }

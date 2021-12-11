@@ -52,7 +52,7 @@ export function AchievementsComponent() {
     )
 }
 
-function renderAchievement(achievement: Achievement, unlockedNum: number): React.ReactFragment {
+export function renderAchievement(achievement: Achievement, unlockedNum: number): React.ReactFragment {
     console.log(achievement)
     return (
         <div className={achievement.unlocked ? "achievement-unlocked" : "achievement-locked"} key={achievement.title} style={{ animationDelay: `${unlockedNum * 0.1}s` }}>

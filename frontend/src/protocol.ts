@@ -17,7 +17,8 @@ export type ClientCalendarRequest = CalendarGetRequest;
 export type ServerCalendarResponse = CalendarResponse;
 
 // Used for /log-activity
-export type ClientLogActivityRequest = LoggedActivityInfo; // No response except HTTP 200
+export type ClientLogActivityRequest = LoggedActivityInfo;
+export type ServerLogActivityResponse = Achievements;
 
 // Used for /achievements
 export type ServerAchievementsResponse = Achievements;
