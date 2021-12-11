@@ -40,7 +40,7 @@ export function Calendar() {
     const [unlockedAchievements, setUnlockedAchievements] = React.useState<Achievement[]>([]);
 
     const todayActivities = getActivitiesForDay(currentlyOpenedDay, availableActivities);
-    const alreadyLoggedActivityForOpening = loggedActivities.find(a => a.day == openingDay);
+    const alreadyLoggedActivityForOpening = loggedActivities.find(a => a.day === openingDay);
 
     let parsedDistance = -1;
     let validDistance = false;
