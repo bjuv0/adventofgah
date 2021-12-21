@@ -176,6 +176,18 @@ pub fn get_achievements() -> Vec<AchievementData> {
             achievement_type: AchievementType::Distance(90.0, Activity::SKI),
         },
         AchievementData {
+            title: "Ho Ho Ho".to_string(),
+            description: "Register an activety on Christmas eve".to_string(),
+            rank: AchievementRank::Bronze,
+            achievement_type: AchievementType::AtDate(23),
+        },
+        AchievementData {
+            title: "Active every day".to_string(),
+            description: "Register an activety every day".to_string(),
+            rank: AchievementRank::Diamond,
+            achievement_type: AchievementType::FullCalender(),
+        },
+        AchievementData {
             title: "Run x3".to_string(),
             description: "Three running days in a row".to_string(),
             rank: AchievementRank::Silver,
@@ -246,18 +258,6 @@ pub fn get_achievements() -> Vec<AchievementData> {
             description: "Seven skiing days in a row".to_string(),
             rank: AchievementRank::Diamond,
             achievement_type: AchievementType::Streak(7, Activity::SKI),
-        },
-        AchievementData {
-            title: "Active every day".to_string(),
-            description: "Register an activety every day".to_string(),
-            rank: AchievementRank::Diamond,
-            achievement_type: AchievementType::FullCalender(),
-        },
-        AchievementData {
-            title: "Ho Ho Ho".to_string(),
-            description: "Register an activety on Christmas eve".to_string(),
-            rank: AchievementRank::Diamond,
-            achievement_type: AchievementType::AtDate(23),
         },
     ]
 }
