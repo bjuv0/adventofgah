@@ -17,6 +17,8 @@ pub enum AchievementType {
     Streak(i32, Activity),
     Distance(f64, Activity),
     ActivityCount(i32, Activity),
+    AtDate(i32),
+    FullCalender(),
 }
 
 #[derive(Debug)]
@@ -244,6 +246,18 @@ pub fn get_achievements() -> Vec<AchievementData> {
             description: "Seven skiing days in a row".to_string(),
             rank: AchievementRank::Diamond,
             achievement_type: AchievementType::Streak(7, Activity::SKI),
+        },
+        AchievementData {
+            title: "Active every day".to_string(),
+            description: "Register an activety every day".to_string(),
+            rank: AchievementRank::Diamond,
+            achievement_type: AchievementType::FullCalender(),
+        },
+        AchievementData {
+            title: "Ho Ho Ho".to_string(),
+            description: "Register an activety on Christmas eve".to_string(),
+            rank: AchievementRank::Diamond,
+            achievement_type: AchievementType::AtDate(23),
         },
     ]
 }

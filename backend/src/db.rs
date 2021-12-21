@@ -525,7 +525,7 @@ impl Db {
         let mut streaks = HashMap::new();
         let mut streak_count = 1;
         let mut last_day: Option<ActivityRecord> = None;
-        for activity in activities {
+        for activity in &activities {
             let count = activity_counts.entry(activity.activity).or_insert(0);
             *count += 1;
 
@@ -568,6 +568,11 @@ impl Db {
                     Activity::RUN => lb.run_dst >= distance,
                     Activity::WALK => lb.run_dst >= distance,
                 },
+                AchievementType::FullCalender() => activities.len() == 24,
+                AchievementType::AtDate(event_id) => activities
+                    .iter()
+                    .find(|&activety| activety.event_id == event_id)
+                    .is_some(),
             };
 
             if unlocked {
