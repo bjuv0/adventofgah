@@ -391,13 +391,13 @@ impl Db {
     pub fn get_daily_event(&self, day: i32) -> Result<Event> {
         let mut query = self
             .conn
-            .prepare("SELECT * FROM EVENT WHERE id <= (?)")
+            .prepare("SELECT * FROM EVENT WHERE id = (?)")
             .unwrap();
         let res = from_rows::<Event>(query.query([day]).unwrap());
         for e in res {
             return Ok(e?);
         }
-        Err(anyhow::anyhow!("Already registered"))
+        Err(anyhow::anyhow!("Day out of range"))
     }
 
     pub fn get_logged_activities(&self, user: Uuid) -> Result<Vec<LoggedActivityInfo>> {
