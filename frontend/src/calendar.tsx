@@ -15,15 +15,15 @@ function refreshCalendar(setAvailableActivities: (activities: Array<ActivityInfo
         return;
     }
     infoQuery = getCalendarInfo();
-        infoQuery.then(response => {
-            if (typeof response.available_activities !== 'undefined') {
-                setAvailableActivities(response.available_activities);
-            }
-            if (typeof response.logged_activities !== 'undefined') {
-                setLoggedActivities(response.logged_activities);
-            }
-            infoQuery = undefined;
-        })
+    infoQuery.then(response => {
+        if (typeof response.available_activities !== 'undefined') {
+            setAvailableActivities(response.available_activities);
+        }
+        if (typeof response.logged_activities !== 'undefined') {
+            setLoggedActivities(response.logged_activities);
+        }
+        infoQuery = undefined;
+    })
         .catch(error => console.log(error))
         .finally(() => infoQuery = undefined);
 }
@@ -110,61 +110,61 @@ export function Calendar() {
     }
     return (
         <div>
-        <table>
-            <tbody>
-                <tr>
-                    { days.slice(0, 6).map(d => (<td key={d.toString()} className={getOpeningClosingClassName(d, openingDay, closingDay)}>{renderDay(d, openRegisterActivityDialog, loggedActivities)}</td>)) }
-                </tr>
-                <tr>
-                    { days.slice(6, 12).map(d => (<td key={d.toString()} className={getOpeningClosingClassName(d, openingDay, closingDay)}>{renderDay(d, openRegisterActivityDialog, loggedActivities)}</td>)) }
-                </tr>
-                <tr>
-                    { days.slice(12, 18).map(d => (<td key={d.toString()} className={getOpeningClosingClassName(d, openingDay, closingDay)}>{renderDay(d, openRegisterActivityDialog, loggedActivities)}</td>)) }
-                </tr>
-                <tr>
-                    { days.slice(18, 24).map(d => (<td key={d.toString()} className={getOpeningClosingClassName(d, openingDay, closingDay)}>{renderDay(d, openRegisterActivityDialog, loggedActivities)}</td>)) }
-                </tr>
-            </tbody>
-        </table>
-        <Dialog open={registeringActivity} onClose={closeRegisterActivityDialog}>
-            <DialogTitle>Log activity</DialogTitle>
-            <DialogContent>
-            <DialogContentText>
-                Activities available to choose from today are:
-            </DialogContentText>
-            { CurrentDayActivities(currentlyOpenedDay, todayActivities, selectedActivityForRegistration, setSelectedActivityForRegistration) }
+            <table>
+                <tbody>
+                    <tr>
+                        {days.slice(0, 6).map(d => (<td key={d.toString()} className={getOpeningClosingClassName(d, openingDay, closingDay)}>{renderDay(d, openRegisterActivityDialog, loggedActivities)}</td>))}
+                    </tr>
+                    <tr>
+                        {days.slice(6, 12).map(d => (<td key={d.toString()} className={getOpeningClosingClassName(d, openingDay, closingDay)}>{renderDay(d, openRegisterActivityDialog, loggedActivities)}</td>))}
+                    </tr>
+                    <tr>
+                        {days.slice(12, 18).map(d => (<td key={d.toString()} className={getOpeningClosingClassName(d, openingDay, closingDay)}>{renderDay(d, openRegisterActivityDialog, loggedActivities)}</td>))}
+                    </tr>
+                    <tr>
+                        {days.slice(18, 24).map(d => (<td key={d.toString()} className={getOpeningClosingClassName(d, openingDay, closingDay)}>{renderDay(d, openRegisterActivityDialog, loggedActivities)}</td>))}
+                    </tr>
+                </tbody>
+            </table>
+            <Dialog open={registeringActivity} onClose={closeRegisterActivityDialog}>
+                <DialogTitle>Log activity</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Activities available to choose from today are:
+                    </DialogContentText>
+                    {CurrentDayActivities(currentlyOpenedDay, todayActivities, selectedActivityForRegistration, setSelectedActivityForRegistration)}
+                    {
+                        typeof alreadyLoggedActivityForOpening !== 'undefined' ?
+                            <div>
+                                Logged
+                                {renderActivity(alreadyLoggedActivityForOpening.info.activity)}
+                                {alreadyLoggedActivityForOpening.info.value}
+                            </div>
+                            :
+                            <TextField
+                                autoFocus
+                                margin='dense'
+                                id='distance'
+                                label='Distance'
+                                type='text'
+                                fullWidth
+                                variant="standard"
+                                onChange={handleLogActivityDistanceChanged}
+                            />
+                    }
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={closeRegisterActivityDialog} id='cancel'>Cancel</Button>
+                    <Button onClick={closeRegisterActivityDialog} id='register' disabled={!(validDistance && typeof todayActivities !== 'undefined' && todayActivities.length > 0) || typeof alreadyLoggedActivityForOpening !== 'undefined'}>Log</Button>
+                </DialogActions>
+            </Dialog>
             {
-                typeof alreadyLoggedActivityForOpening !== 'undefined' ?
-                    <div>
-                        Logged
-                        {renderActivity(alreadyLoggedActivityForOpening.info.activity)}
-                        {alreadyLoggedActivityForOpening.info.value}
+                unlockedAchievements.length > 0 ?
+                    <div className="floating-achievement">
+                        {unlockedAchievements.map((a, i) => renderAchievement(a, i))}
                     </div>
-                 :
-                    <TextField
-                            autoFocus
-                            margin='dense'
-                            id='distance'
-                            label='Distance'
-                            type='text'
-                            fullWidth
-                            variant="standard"
-                            onChange={handleLogActivityDistanceChanged}
-                        />
+                    : ""
             }
-            </DialogContent>
-            <DialogActions>
-            <Button onClick={closeRegisterActivityDialog} id='cancel'>Cancel</Button>
-            <Button onClick={closeRegisterActivityDialog} id='register' disabled={!(validDistance && typeof todayActivities !== 'undefined' && todayActivities.length > 0) || typeof alreadyLoggedActivityForOpening !== 'undefined'}>Log</Button>
-            </DialogActions>
-        </Dialog>
-        {
-            unlockedAchievements.length > 0 ?
-                <div className="floating-achievement">
-                    { unlockedAchievements.map((a, i) => renderAchievement(a, i)) }
-                </div>
-                : ""
-        }
         </div>
     );
 }
@@ -190,12 +190,12 @@ function CurrentDayActivities(dayOfDecZeroIndexed: number, todayActivities: Acti
             value={selectedActivity}
             exclusive
             onChange={handleChangedActivity}
-            >
+        >
             {
                 typeof todayActivities === 'undefined' ?
                     <p>"No activities"</p>
-                :
-                    todayActivities.map(a => <ToggleButton value={a.activity}>{renderActivity(a.activity)} { a.value }</ToggleButton>)
+                    :
+                    todayActivities.map(a => <ToggleButton value={a.activity}>{renderActivity(a.activity)} {a.value}</ToggleButton>)
             }
         </ToggleButtonGroup>
     );
@@ -207,9 +207,9 @@ function renderDay(day: number, openRegisterActivityDialog: (day: number) => voi
     return (
         <div className="calendar-day">
             <Paper elevation={10} >
-                <IconButton color="primary" aria-label="open-day" onClick={locked ? clickedDay : () => openRegisterActivityDialog(day) } id={day.toString()}>
-                    { locked ? 
-                            <LockIcon></LockIcon>
+                <IconButton color="primary" aria-label="open-day" onClick={locked ? clickedDay : () => openRegisterActivityDialog(day)} id={day.toString()}>
+                    {locked ?
+                        <LockIcon></LockIcon>
                         :
                         typeof loggedActivity !== 'undefined' ?
                             <div> {renderActivity(loggedActivity.activity)} {loggedActivity.value} </div>
@@ -217,7 +217,7 @@ function renderDay(day: number, openRegisterActivityDialog: (day: number) => voi
                             <LockOpenIcon></LockOpenIcon>
                     }
                 </IconButton>
-                { day + 1 }
+                {day + 1}
             </Paper>
         </div>
     );
@@ -247,8 +247,8 @@ function clickedDay(event: React.MouseEvent<HTMLButtonElement>) {
 }
 
 function getCurrentDay(): number {
-    const dec1 = new Date('2021-12-01');
-    const dec25 = new Date('2021-12-25');
+    const dec1 = new Date('2022-12-01');
+    const dec25 = new Date('2022-12-25');
     const today = new Date();
     if (today.getTime() < dec1.getTime()) {
         return -1;
