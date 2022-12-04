@@ -102,7 +102,10 @@ pub struct Db {
 }
 
 fn today_unsafe() -> i32 {
-    let start = NaiveDate::from_ymd(2022, 12, 1).and_hms(0, 0, 0);
+    let start = NaiveDate::from_ymd_opt(2022, 12, 1)
+        .expect("Todays date was invalid")
+        .and_hms_opt(0, 0, 0)
+        .expect("Invalid HMS for date");
     chrono::offset::Local::now()
         .naive_local()
         .signed_duration_since(start)
