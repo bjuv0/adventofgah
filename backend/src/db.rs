@@ -34,6 +34,7 @@ pub struct LeaderboardDetail {
     walk_dst: f64,
     run_dst: f64,
     ski_dst: f64,
+    climb_time: f64,
     bronze_achievements: i32,
     silver_achievements: i32,
     gold_achievements: i32,
@@ -53,6 +54,7 @@ pub enum Activity {
     RUN = 1,
     WALK = 2,
     SKI = 3,
+    CLIMB = 4,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -126,6 +128,7 @@ fn multiplier(act: Activity) -> i32 {
         Activity::RUN => 1,
         Activity::SKI => 2,
         Activity::WALK => 1,
+        Activity::CLIMB => 20,
     }
 }
 
@@ -315,6 +318,7 @@ impl Db {
             walk_dst: 0.0,
             run_dst: 0.0,
             ski_dst: 0.0,
+            climb_time: 0.0,
             bronze_achievements: 0,
             silver_achievements: 0,
             gold_achievements: 0,
@@ -333,6 +337,7 @@ impl Db {
                 Activity::RUN => details.run_dst += activity.distance,
                 Activity::WALK => details.walk_dst += activity.distance,
                 Activity::SKI => details.ski_dst += activity.distance,
+                Activity::CLIMB => details.climb_time += activity.distance,
             }
             details.points += activity.score;
         }
@@ -382,13 +387,9 @@ impl Db {
             .unwrap();
         let res = from_rows::<Event>(query.query([today()]).unwrap());
 
-        // hmm this could be more prettier, need to learn more rust :P
-        let mut ret: Vec<Vec<ActivityInfo>> = Vec::new();
-        for e in res {
-            ret.push(get_daily_available(e?.distance));
-        }
-
-        Ok(ret)
+        res.into_iter()
+            .map(|e| Ok(get_daily_available(e?.distance)))
+            .collect()
     }
 
     pub fn get_daily_event(&self, day: i32) -> Result<Event> {
@@ -570,6 +571,7 @@ impl Db {
                     Activity::SKI => lb.ski_dst >= distance,
                     Activity::RUN => lb.run_dst >= distance,
                     Activity::WALK => lb.run_dst >= distance,
+                    Activity::CLIMB => lb.climb_time >= distance,
                 },
                 AchievementType::FullCalender() => activities.len() == 24,
                 AchievementType::AtDate(event_id) => activities
