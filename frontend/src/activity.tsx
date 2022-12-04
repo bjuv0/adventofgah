@@ -1,3 +1,5 @@
+import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
+import LandscapeIcon from '@mui/icons-material/Landscape';
 import DirectionsBikeIcon from '@mui/icons-material/DirectionsBike';
 import DirectionsRunIcon from '@mui/icons-material/DirectionsRun';
 import DirectionsWalkIcon from '@mui/icons-material/DirectionsWalk';
@@ -10,5 +12,7 @@ export function renderActivity(activity: Activity): React.ReactFragment {
         case 'RUN': return <DirectionsRunIcon/>;
         case 'WALK': return <DirectionsWalkIcon/>;
         case 'SKI': return <DownhillSkiingIcon/>;
+        case 'CLIMB': return <LandscapeIcon/>;
     }
+    return <QuestionMarkIcon/>;
 }

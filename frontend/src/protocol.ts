@@ -45,6 +45,7 @@ export interface LeaderboardDetail {
     run_dst: number;    // Total run distance
     walk_dst: number;   // Total walk distance
     ski_dst: number;    // Total ski distance
+    climb_time: number;    // Total climb minutes
     bronze_achievements: number;
     silver_achievements: number;
     gold_achievements: number;
@@ -62,7 +63,7 @@ interface Range {
     end?: number;
 }
 
-export type Activity = 'BIKE' | 'RUN' | 'WALK' | 'SKI';
+export type Activity = 'BIKE' | 'RUN' | 'WALK' | 'SKI' | 'CLIMB';
 
 export interface ActivityInfo {
     activity: Activity;

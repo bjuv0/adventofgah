@@ -39,6 +39,7 @@ export function Leaderboard() {
                             <StyledTableCell align='right'>Run</StyledTableCell>
                             <StyledTableCell align='right'>Walk</StyledTableCell>
                             <StyledTableCell align='right'>Ski</StyledTableCell>
+                            <StyledTableCell align='right'>Climb</StyledTableCell>
                             <StyledTableCell align='right'></StyledTableCell>
                             <StyledTableCell align='right'></StyledTableCell>
                             <StyledTableCell align='right'></StyledTableCell>
@@ -55,6 +56,7 @@ export function Leaderboard() {
                                     <StyledTableCell align='right'>{row.run_dst}</StyledTableCell>
                                     <StyledTableCell align='right'>{row.walk_dst}</StyledTableCell>
                                     <StyledTableCell align='right'>{row.ski_dst}</StyledTableCell>
+                                    <StyledTableCell align='right'>{row.climb_time}</StyledTableCell>
                                     <StyledTableCell align='right'>{row.bronze_achievements} {renderTrophy('BRONZE')}</StyledTableCell>
                                     <StyledTableCell align='right'>{row.silver_achievements} {renderTrophy('SILVER')}</StyledTableCell>
                                     <StyledTableCell align='right'>{row.gold_achievements} {renderTrophy('GOLD')}</StyledTableCell>
